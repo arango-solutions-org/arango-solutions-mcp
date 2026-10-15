@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.22 AS builder
+FROM python:3.14-alpine3.22 AS builder
 
 WORKDIR /opt/arangodb-mcp
 
@@ -15,7 +15,7 @@ RUN poetry install --no-interaction --no-ansi --only main --no-root && \
     .venv/bin/python -c "import arangodb_mcp; import importlib.resources as r; assert r.files('arangodb_mcp.catalog').joinpath('tools.yaml').is_file()" && \
     .venv/bin/pip uninstall --yes pip setuptools wheel
 
-FROM python:3.11-alpine3.22 AS runtime
+FROM python:3.14-alpine3.22 AS runtime
 
 RUN apk upgrade --no-cache && \
     python -m pip uninstall --yes pip setuptools wheel && \
