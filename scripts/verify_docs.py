@@ -164,7 +164,7 @@ def verify() -> list[str]:
     )
     for marker in (
         "pypa/gh-action-pypi-publish@release/v1",
-        "actions/attest-build-provenance@v2",
+        "actions/attest-build-provenance@v4",
         "cosign sign --yes",
         "gh release create",
     ):

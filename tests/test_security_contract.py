@@ -23,8 +23,8 @@ def test_security_workflow_preserves_codeql_and_dependency_audit():
     assert 'tags:\n      - "v*.*.*"' in release
     assert "pypa/gh-action-pypi-publish@release/v1" in release
     assert "id-token: write" in release
-    assert "actions/attest-build-provenance@v2" in release
-    assert "actions/attest-sbom@v2" in release
+    assert "actions/attest-build-provenance@v4" in release
+    assert "actions/attest-sbom@v4" in release
     assert "cosign sign --yes" in release
     assert "cosign verify" in release
     assert "image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}" in release
