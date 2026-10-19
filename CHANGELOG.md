@@ -61,7 +61,17 @@ All notable changes to this project are documented here. The format follows
   under `src/arangodb_mcp/`. Anything importing them by their old flat paths — or launching
   `main.py` directly — must be updated; see the migration note at the top of this release.
 
+### Fixed
+
+- The release workflow's wheel re-verification asserted a stale tool count (81 instead of 83),
+  which would have failed the first tagged release. `scripts/verify_docs.py` now derives the
+  expected count for every hardcoded copy, including `release.yml` and `verify_wheel.py`.
+
 ### Security
 
+- Upgrade `mcp` to 1.30.0 for GHSA-84m7-p3x7-pcfv (CVE-2026-59951: unbounded session
+  accumulation in the Streamable HTTP transport); the declared floor is now `^1.30.0`.
+- Upgrade PyJWT to 2.15.1 and urllib3 to 2.8.0 for newly published advisories; the declared
+  PyJWT floor is now `^2.15.1`.
 - Release jobs use job-scoped least privileges, short-lived OIDC credentials, immutable image
   digests, provenance attestations, and signature identity verification.
