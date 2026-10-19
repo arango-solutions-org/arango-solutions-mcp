@@ -169,8 +169,20 @@ def verify() -> list[str]:
         "gh release create",
     ):
         _require(errors, release, marker, ".github/workflows/release.yml")
-    for marker in ('"-I", str(probe)', "len(manager.all_registered_tools()) == 83"):
+    for marker in (
+        '"-I", str(probe)',
+        f"len(load_tool_catalog().tools) == {tool_count}",
+        f"len(manager.all_registered_tools()) == {tool_count}",
+    ):
         _require(errors, wheel_smoke, marker, "scripts/verify_wheel.py")
+    # The release workflow re-verifies the published wheel with its own hardcoded
+    # count; keep it tied to the live inventory so a new tool cannot break a release.
+    _require(
+        errors,
+        release,
+        f"assert len(load_tool_catalog().tools) == {tool_count}",
+        ".github/workflows/release.yml",
+    )
     _require(
         errors,
         phase4_runner,
