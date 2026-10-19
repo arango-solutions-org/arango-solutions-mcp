@@ -319,7 +319,7 @@ jobs:
             "arangodb-mcp-server==$VERSION"
           verify-venv/bin/arangodb-mcp --version
           verify-venv/bin/python -I -c \
-            "import importlib.resources as r; from arangodb_mcp.catalog.loader import load_tool_catalog; assert len(load_tool_catalog().tools) == 81; assert r.files('arangodb_mcp.manuals').joinpath('aql_ref.md').is_file()"
+            "import importlib.resources as r; from arangodb_mcp.catalog.loader import load_tool_catalog; assert len(load_tool_catalog().tools) == 83; assert r.files('arangodb_mcp.manuals').joinpath('aql_ref.md').is_file()"
 
       - name: Verify image, signature, and attestations
         env:
