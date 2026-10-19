@@ -67,6 +67,9 @@ disallow_untyped_defs = true
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# .cursor/hooks/ is vendored verbatim from the arango-shared-memory templates and is
+# overwritten on every template sync; lint it in that repo, not here.
+extend-exclude = [".cursor/hooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
