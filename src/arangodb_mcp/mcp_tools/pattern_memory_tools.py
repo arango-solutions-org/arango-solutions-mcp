@@ -940,9 +940,7 @@ async def save_drift_alert(
         description="Git branch the audit ran on. /prd-sync sends this on every write; "
         "without it a drift alert cannot say which branch it was true on.",
     ),
-    commit: str = Field(
-        default="", description="Short git commit the audit ran against."
-    ),
+    commit: str = Field(default="", description="Short git commit the audit ran against."),
     collection_name: str = Field(default="drift_alerts", description="Alerts collection."),
     database_name: str = Field(
         default="", description="Target database (default: server default)."
