@@ -69,6 +69,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Upgrade `certifi` to 2026.10.19 for GHSA-6q48-6c7w-9gw2 (critical): earlier bundles trusted
+  `emSign ECC Root CA - G3`, whose chained intermediates have compromised keys. OIDC discovery and
+  JWKS, embedding calls, and ArangoDB HTTPS connections all validate against this bundle.
 - Upgrade `mcp` to 1.30.0 for GHSA-84m7-p3x7-pcfv (CVE-2026-59951: unbounded session
   accumulation in the Streamable HTTP transport); the declared floor is now `^1.30.0`.
 - Upgrade PyJWT to 2.15.1 and urllib3 to 2.8.0 for newly published advisories; the declared
