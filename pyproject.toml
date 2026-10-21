@@ -20,7 +20,7 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.10"
 python-arango = "^8.1.0"
-mcp = "^1.30.0"
+mcp = "^2.3.0"
 pydantic = "^2.0.0"
 pydantic-settings = "^2.0.0"
 anyio = "^4.5.0"

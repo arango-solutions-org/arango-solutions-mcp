@@ -42,7 +42,7 @@ async def test_resources_and_prompts_have_exact_interoperable_inventory():
     templates = await mcp_app.list_resource_templates()
     prompts = await mcp_app.list_prompts()
     assert {str(resource.uri) for resource in resources} == set(inventory["resources"])
-    assert {template.uriTemplate for template in templates} == set(inventory["templates"])
+    assert {template.uri_template for template in templates} == set(inventory["templates"])
     assert {prompt.name for prompt in prompts} == set(inventory["prompts"])
 
 

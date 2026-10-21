@@ -5,7 +5,7 @@ import os
 from unittest.mock import patch
 
 import pytest
-from mcp.server.fastmcp.exceptions import ToolError
+from mcp.server.mcpserver.exceptions import ToolError
 
 os.environ.setdefault("ARANGO_HOSTS", "http://localhost:8529")
 os.environ.setdefault("ARANGO_ROOT_USERNAME", "root")

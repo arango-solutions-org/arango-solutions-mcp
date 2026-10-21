@@ -145,21 +145,33 @@ class TestServerConfiguration:
         from arangodb_mcp.config import settings
 
         expected = settings.server.server_name
-        actual = mcp_app._mcp_server.name
+        actual = mcp_app.name
         assert actual == expected, f"Server name mismatch: {actual!r} != {expected!r}"
 
     def test_server_instructions_contain_tool_count(self):
-        instructions = mcp_app._mcp_server.instructions
+        instructions = mcp_app.instructions
         assert instructions is not None, "Server instructions are None"
         assert "83 cataloged tools" in instructions
         assert "Active profile: `readonly`" in instructions
 
+    def test_server_version_is_advertised(self):
+        # MCP SDK 2.x advertises an empty serverInfo.version unless one is passed.
+        from arangodb_mcp.config import settings
+
+        assert mcp_app._lowlevel_server.version == settings.server.server_version
+        assert mcp_app._lowlevel_server.version
+
     def test_default_http_mode_is_stateless(self):
-        assert mcp_app.settings.stateless_http is True
-        assert mcp_app.settings.json_response is True
+        from arangodb_mcp.server import HTTP_OPTIONS
+
+        assert HTTP_OPTIONS.stateless_http is True
+        assert HTTP_OPTIONS.json_response is True
+        assert HTTP_OPTIONS.streamable_http_path == "/mcp"
 
     def test_transport_security_defaults_fail_closed(self):
-        transport_security = mcp_app.settings.transport_security
+        from arangodb_mcp.server import HTTP_OPTIONS
+
+        transport_security = HTTP_OPTIONS.transport_security
         assert transport_security is not None
         assert transport_security.enable_dns_rebinding_protection is True
         assert "localhost:*" in transport_security.allowed_hosts

@@ -151,7 +151,7 @@ def setup_event_loop_policy():
 def _run_http_transport(transport: str, host: str, port: int, plain_token: str) -> None:
     """Build the composed ASGI app and serve it via uvicorn.
 
-    Falls back to ``mcp_app.run(...)`` only if the FastMCP version does not
+    Falls back to ``mcp_app.run(...)`` only if the MCP SDK version does not
     expose ASGI app factories. In that case, if a token was configured we exit
     non-zero rather than silently disabling auth.
     """
@@ -169,7 +169,8 @@ def _run_http_transport(transport: str, host: str, port: int, plain_token: str) 
             "The MCP SDK does not expose an ASGI app factory on this version; running via "
             "mcp_app.run() without middleware. Loopback bind only.",
         )
-        mcp_app.run(transport=transport)
+        # SDK 2.x takes the bind address on run(), not on the server constructor.
+        mcp_app.run(transport=transport, host=host, port=port)  # type: ignore[call-overload]
         return
 
     from arangodb_mcp.asgi.app_factory import create_http_app

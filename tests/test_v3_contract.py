@@ -31,7 +31,12 @@ async def test_every_registered_tool_dispatches_through_v3_envelope(monkeypatch)
         return {"value": "ok"}
 
     metadata_type = type(manager.all_registered_tools()[0].fn_metadata)
-    monkeypatch.setattr(metadata_type, "call_fn_with_arg_validation", successful_call)
+    # MCP SDK 2.x Tool.run calls FuncMetadata.call_fn (call_fn_with_arg_validation
+    # still exists but is no longer on the dispatch path, so stubbing it is vacuous).
+    monkeypatch.setattr(metadata_type, "call_fn", successful_call)
+    # SDK 2.x validates arguments before call_fn; this test exercises the envelope for
+    # every tool, not each tool's required parameters, so validation passes through.
+    monkeypatch.setattr(metadata_type, "validate_arguments", lambda _self, arguments: arguments)
     try:
         for tool in manager.all_registered_tools():
             result = await manager.call_tool(tool.name, {})
@@ -45,7 +50,8 @@ async def test_every_registered_tool_dispatches_through_v3_envelope(monkeypatch)
                 assert result["data"] == {"value": "ok"}
                 assert result["error"] is None
             assert tool.output_schema["properties"]["contractVersion"]["const"] == "3.0"
-        content, structured = await manager.call_tool("list-databases", {}, convert_result=True)
+        converted = await manager.call_tool("list-databases", {}, convert_result=True)
+        content, structured = converted.content, converted.structured_content
         assert structured["contractVersion"] == "3.0"
         assert "result" not in structured
         assert '"contractVersion": "3.0"' in content[0].text

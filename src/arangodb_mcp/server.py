@@ -1,9 +1,16 @@
-from mcp.server.fastmcp import FastMCP
-from mcp.server.transport_security import TransportSecuritySettings
+from dataclasses import dataclass
+
+from mcp.server.caching import CacheHint
+from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import (
+    DEFAULT_MAX_REQUEST_BODY_SIZE,
+    TransportSecuritySettings,
+)
 
 from arangodb_mcp.arango_connector import arango_db_lifespan
 from arangodb_mcp.catalog.loader import load_tool_catalog
 from arangodb_mcp.config import settings
+from arangodb_mcp.middleware.protocol import CACHE_HINTS
 from arangodb_mcp.policy.context import PolicyContext
 from arangodb_mcp.policy.profiles import resolve_tool_inventory
 from arangodb_mcp.policy.tool_manager import PolicyToolManager
@@ -92,7 +99,7 @@ All operations accept an optional database_name parameter.
 - Use stream transactions for multi-document atomicity
 - Hot backup operations require Enterprise Edition
 """
-# Create the FastMCP application instance
+# Create the MCP server application instance
 _allowed_hosts = [
     item.strip() for item in settings.server.mcp_allowed_hosts.split(",") if item.strip()
 ]
@@ -104,15 +111,41 @@ _transport_security = TransportSecuritySettings(
     allowed_hosts=_allowed_hosts,
     allowed_origins=_allowed_origins,
 )
-mcp_app = FastMCP(
-    name=_server_name,
-    instructions=_server_instructions,
-    host=settings.server.mcp_host,
-    port=settings.server.mcp_port,
+
+
+@dataclass(frozen=True)
+class HTTPTransportOptions:
+    """HTTP transport settings applied by the ASGI app factory and ``run()``.
+
+    MCP SDK 2.x no longer accepts these on the server constructor; they are passed to
+    ``streamable_http_app()``/``sse_app()``/``run()`` instead, so they live here.
+    """
+
+    streamable_http_path: str
+    json_response: bool
+    stateless_http: bool
+    max_request_body_size: int
+    transport_security: TransportSecuritySettings
+
+
+HTTP_OPTIONS = HTTPTransportOptions(
+    streamable_http_path="/mcp",
     json_response=True,
     stateless_http=settings.server.mcp_protocol_mode != "legacy",
+    max_request_body_size=DEFAULT_MAX_REQUEST_BODY_SIZE,
     transport_security=_transport_security,
+)
+
+# Keyword arguments only: in SDK 2.x a second positional argument is ``title``.
+mcp_app = MCPServer(
+    name=_server_name,
+    instructions=_server_instructions,
+    version=settings.server.server_version,
     lifespan=arango_db_lifespan,
+    cache_hints={
+        method: CacheHint(ttl_ms=ttl_ms, scope=scope)
+        for method, (ttl_ms, scope) in CACHE_HINTS.items()
+    },
 )
 mcp_app._tool_manager = PolicyToolManager(
     catalog=_tool_catalog,

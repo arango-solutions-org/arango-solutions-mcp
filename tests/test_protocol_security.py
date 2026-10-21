@@ -6,7 +6,7 @@ import pytest
 from mcp.server.transport_security import TransportSecurityMiddleware
 from starlette.requests import Request
 
-from arangodb_mcp.server import mcp_app
+from arangodb_mcp.server import HTTP_OPTIONS
 
 
 def _request(*headers: tuple[bytes, bytes]) -> Request:
@@ -29,7 +29,7 @@ def _request(*headers: tuple[bytes, bytes]) -> Request:
 
 @pytest.mark.asyncio
 async def test_invalid_host_is_rejected():
-    middleware = TransportSecurityMiddleware(mcp_app.settings.transport_security)
+    middleware = TransportSecurityMiddleware(HTTP_OPTIONS.transport_security)
     response = await middleware.validate_request(
         _request((b"host", b"attacker.example"), (b"content-type", b"application/json")),
         is_post=True,
@@ -41,7 +41,7 @@ async def test_invalid_host_is_rejected():
 
 @pytest.mark.asyncio
 async def test_invalid_browser_origin_is_rejected():
-    middleware = TransportSecurityMiddleware(mcp_app.settings.transport_security)
+    middleware = TransportSecurityMiddleware(HTTP_OPTIONS.transport_security)
     response = await middleware.validate_request(
         _request(
             (b"host", b"localhost:8000"),
@@ -57,7 +57,7 @@ async def test_invalid_browser_origin_is_rejected():
 
 @pytest.mark.asyncio
 async def test_allowed_host_and_origin_pass_transport_security():
-    middleware = TransportSecurityMiddleware(mcp_app.settings.transport_security)
+    middleware = TransportSecurityMiddleware(HTTP_OPTIONS.transport_security)
     response = await middleware.validate_request(
         _request(
             (b"host", b"localhost:8000"),
