@@ -241,6 +241,48 @@ class TestPatternApplied:
         assert captured["binds"]["worked"] is False
         assert "applied_failed: @worked ? af : af + 1" in captured["aql"]
 
+    def test_unrecognised_outcome_is_rejected_not_counted_as_success(self, monkeypatch):
+        """The flag used to be unable to say no.
+
+        `worked = outcome != "failed"` meant every unrecognised value -- "success",
+        "ok", a typo, a stray space -- recorded a positive signal. With the default
+        also set to "worked", the only reachable outcome was success: 113 applies and
+        0 failures across 119 patterns as of 2026-09-28, which made success_rate a
+        constant and the ranking multiplier built on it inert.
+        """
+        db = MagicMock()
+        spy = _dispatch_spy()
+        monkeypatch.setattr(pm, "run_sync", spy)
+        for bad in ("success", "ok", "Faild", "", "true"):
+            with patch.object(pm.arango_connector, "get_db", return_value=db):
+                out = asyncio.run(
+                    pm.pattern_applied(
+                        keys=["k1"],
+                        outcome=bad,
+                        collection_name="shared_patterns",
+                        database_name="",
+                    )
+                )
+            assert out["result"]["error_code"] == "invalid_outcome", bad
+            # nothing was written -- the caller must come back with a real verdict
+            assert "_run_query" not in spy.dispatched, bad
+
+    def test_failed_is_accepted_case_and_space_insensitively(self, monkeypatch):
+        db = MagicMock()
+        db.aql.execute.return_value = [{"_key": "k1"}]
+        monkeypatch.setattr(pm, "run_sync", _dispatch_spy())
+        for variant in ("failed", "FAILED", "  Failed  "):
+            with patch.object(pm.arango_connector, "get_db", return_value=db):
+                out = asyncio.run(
+                    pm.pattern_applied(
+                        keys=["k1"],
+                        outcome=variant,
+                        collection_name="shared_patterns",
+                        database_name="",
+                    )
+                )
+            assert out["result"]["outcome"] == "failed", variant
+
 
 # ---------------------------------------------------------------------------
 # save-drift-alert

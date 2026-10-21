@@ -1025,17 +1025,25 @@ async def save_drift_alert(
     you actually applied, NOT every result that was shown. This is the APPLY side of the
     read-path funnel: /pattern-search records what was surfaced; this records what was
     reused. One call, no AQL needed.
+
+    State `outcome` explicitly. A pattern that was tried and did NOT help is
+    recorded with outcome='failed' -- it is a real and useful signal, not a
+    confession. Do not dismiss such a pattern as "not reused": dismissal means
+    reviewed and never tried, which is a different thing and loses the evidence.
     """,
 )
 async def pattern_applied(
     keys: List[str] = Field(description="_key(s) of the pattern(s) actually applied."),
     outcome: str = Field(
         default="worked",
-        description="Apply outcome: 'worked' (default) or "
-        "'failed'. 'failed' records negative signal (bumps applied_failed) "
-        "WITHOUT boosting usage_count / last_used, so a pattern that was tried "
-        "but did not help is down-weighted in /pattern-search ranking rather "
-        "than rewarded.",
+        description="Apply outcome: 'worked' or 'failed' -- state it explicitly. "
+        "'failed' records negative signal (bumps applied_failed) WITHOUT boosting "
+        "usage_count / last_used, so a pattern that was tried but did not help is "
+        "down-weighted in /pattern-search ranking rather than rewarded. A pattern "
+        "FAILED if, after you adapted it: the checks it was meant to make pass are "
+        "still failing, you reverted it for a different approach, or it introduced a "
+        "defect you then had to fix. Any other value is rejected -- a typo must never "
+        "be recorded as a success.",
     ),
     collection_name: str = Field(default="shared_patterns", description="Patterns collection."),
     database_name: str = Field(
@@ -1045,7 +1053,20 @@ async def pattern_applied(
     try:
         if not keys:
             return {"result": {"error": "no keys provided"}}
-        worked = str(outcome).strip().lower() != "failed"
+        # Closed value set. This was `!= "failed"`, which made EVERY unrecognised
+        # value -- "success", "ok", "Failed " with a stray space, a typo -- record a
+        # positive signal. Combined with the default, the flag could only ever say
+        # yes: 113 applies and 0 failures across 119 patterns, so success_rate was a
+        # constant and the ranking multiplier built on it ranked nothing.
+        normalized = str(outcome).strip().lower()
+        if normalized not in ("worked", "failed"):
+            return {
+                "result": {
+                    "error": f"outcome must be 'worked' or 'failed', got {outcome!r}",
+                    "error_code": "invalid_outcome",
+                }
+            }
+        worked = normalized != "failed"
         db = await run_sync(arango_connector.get_db, database_name or None)
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         updated = await run_sync(
