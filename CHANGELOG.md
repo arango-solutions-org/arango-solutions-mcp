@@ -57,6 +57,10 @@ All notable changes to this project are documented here. The format follows
 - **Client-visible:** `tools/list` results now carry `cacheScope: "private"` (was `"public"`).
   Under OIDC each caller's tool list is filtered by its token scopes, so it must not be shared
   across authorization contexts. Cache TTLs are unchanged.
+- **Installer-visible:** the minimum runtime dependency versions now match the versions CI
+  tests: `python-arango ^8.3.6`, `pydantic ^2.14.1`, `pydantic-settings ^2.15.0`,
+  `anyio ^4.15.1`, `starlette >=1.7.0` and `uvicorn >=0.54.0`. An environment that pins an
+  older version of any of these no longer resolves with this package.
 - Catalog metadata and AQL manuals are distributed as package data and loaded through
   `importlib.resources`.
 - The container runtime installs the built wheel into a read-only, non-root virtual environment
