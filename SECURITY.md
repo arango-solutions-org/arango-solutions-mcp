@@ -74,7 +74,8 @@ expiration metadata.
 There are no active dependency-audit exceptions. Any future suppression must use the process
 above and must not be added as an untracked permanent ignore.
 
-The container scan has two temporary upstream-SBOM false-positive entries in
-`.trivyignore.yaml`, tracked by
-[issue #5](https://github.com/arango-solutions/arango-solutions-mcp/issues/5). Both expire on
-2026-08-20. Runtime probes verify that the reported packages are absent from the final image.
+The container scan has no active exceptions. `.trivyignore.yaml` keeps an empty list and a dated
+record of the two retired upstream-SBOM false positives tracked by
+[issue #5](https://github.com/arango-solutions/arango-solutions-mcp/issues/5): msgpack
+(GHSA-6v7p-g79w-8964, retired 2026-09-24) and setuptools (CVE-2025-47273, retired 2026-10-21, when
+the Python 3.14 base image stopped shipping setuptools). A new exception follows the process above.
