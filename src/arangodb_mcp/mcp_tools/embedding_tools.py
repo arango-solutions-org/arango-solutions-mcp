@@ -239,9 +239,7 @@ async def embed_document(
         doc = cast(dict[str, Any] | None, await run_sync(coll.get, document_key))
         if not doc:
             return {
-                "result": {
-                    "error": f"document {document_key!r} not found in " f"{collection_name!r}"
-                }
+                "result": {"error": f"document {document_key!r} not found in {collection_name!r}"}
             }
         text = "\n".join(str(doc[f]) for f in source_fields if doc.get(f))
         if not text.strip():

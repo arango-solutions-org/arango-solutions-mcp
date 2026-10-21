@@ -42,7 +42,7 @@ def test_mcp_image_has_dependency_aware_readiness_healthcheck():
     assert "poetry build --format wheel" in dockerfile
     assert ".venv/bin/pip install --no-deps dist/*.whl" in dockerfile
     assert (
-        "COPY --from=builder --chown=root:root " "/opt/arangodb-mcp/.venv /opt/arangodb-mcp/.venv"
+        "COPY --from=builder --chown=root:root /opt/arangodb-mcp/.venv /opt/arangodb-mcp/.venv"
     ) in dockerfile
     assert "COPY . ." not in dockerfile
     assert "chmod -R a-w /opt/arangodb-mcp/.venv" in dockerfile

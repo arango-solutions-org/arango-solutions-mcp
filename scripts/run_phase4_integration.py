@@ -266,11 +266,13 @@ def run_harness(args: argparse.Namespace) -> None:
         )
         _wait_for(
             "Prometheus tool metric",
-            lambda: _prometheus_value(
-                prometheus_url,
-                'mcp_tool_calls_total{tool="list-databases",outcome="success"}',
-            )
-            >= 1,
+            lambda: (
+                _prometheus_value(
+                    prometheus_url,
+                    'mcp_tool_calls_total{tool="list-databases",outcome="success"}',
+                )
+                >= 1
+            ),
             deadline=deadline,
         )
 
