@@ -37,8 +37,8 @@ def test_mcp_image_has_dependency_aware_readiness_healthcheck():
     assert "http://127.0.0.1:8000/readyz" in dockerfile
     assert "http://127.0.0.1:8000/healthz" not in dockerfile
     assert "start-period=15s" in dockerfile
-    assert "FROM python:3.11-alpine3.22 AS builder" in dockerfile
-    assert "FROM python:3.11-alpine3.22 AS runtime" in dockerfile
+    assert "FROM python:3.14-alpine3.22 AS builder" in dockerfile
+    assert "FROM python:3.14-alpine3.22 AS runtime" in dockerfile
     assert "poetry build --format wheel" in dockerfile
     assert ".venv/bin/pip install --no-deps dist/*.whl" in dockerfile
     assert (
