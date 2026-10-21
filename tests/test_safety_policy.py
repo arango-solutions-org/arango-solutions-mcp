@@ -482,7 +482,7 @@ def test_confirmation_tokens_bind_actor_action_parameters_expiry_and_replay():
         arguments=arguments,
         now=1010,
     )
-    assert claims.parameters_sha256 == canonical_parameters_hash(arguments)
+    assert claims.parameters_sha256 == canonical_parameters_hash(arguments, secret.encode("utf-8"))
     with pytest.raises(ConfirmationError, match="already been used"):
         verifier.verify_and_consume(
             token,
@@ -547,3 +547,22 @@ async def test_irreversible_tool_requires_out_of_band_token_and_rejects_replay()
     tool = manager.get_tool("delete-document")
     assert tool is not None
     assert "confirmation_token" in tool.parameters["required"]
+
+
+def test_confirmation_parameter_digest_is_keyed():
+    """The digest rides inside the readable token payload, so it must not be a plain hash.
+
+    Arguments can carry low-entropy secrets (a create-user password); an unkeyed SHA-256
+    of them could be brute-forced from a leaked token.
+    """
+    import hashlib
+    import json
+
+    arguments = {"username": "bob", "password": "hunter2"}
+    plain = hashlib.sha256(
+        json.dumps(arguments, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    ).hexdigest()
+    keyed_a = canonical_parameters_hash(arguments, b"secret-a")
+    keyed_b = canonical_parameters_hash(arguments, b"secret-b")
+    assert keyed_a != keyed_b
+    assert plain not in (keyed_a, keyed_b)

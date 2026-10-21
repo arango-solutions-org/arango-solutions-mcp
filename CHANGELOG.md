@@ -77,6 +77,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Confirmation tokens bind their parameters with an HMAC-SHA256 keyed by the confirmation secret
+  instead of a plain SHA-256. The digest is readable inside a token, and arguments can carry
+  low-entropy values such as a `create-user` password. The token format moves to version 2, so
+  outstanding version-1 tokens (lifetime at most 5 minutes) are rejected.
+- Redacted AQL log lines use a SHA-256 correlation prefix (`<redacted len=N sha256=…>`) instead of
+  SHA-1.
 - Upgrade `certifi` to 2026.10.19 for GHSA-6q48-6c7w-9gw2 (critical): earlier bundles trusted
   `emSign ECC Root CA - G3`, whose chained intermediates have compromised keys. OIDC discovery and
   JWKS, embedding calls, and ArangoDB HTTPS connections all validate against this bundle.

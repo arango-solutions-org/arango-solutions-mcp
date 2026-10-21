@@ -209,7 +209,7 @@ class TestAQLLogRedaction:
         assert "super-secret-value" not in out
         assert "<redacted" in out
         assert "len=" in out
-        assert "sha1=" in out
+        assert "sha256=" in out
 
     def test_redaction_is_deterministic_per_query(self):
         from arangodb_mcp.agents.aql_execution_agent import _aql_log_fragment

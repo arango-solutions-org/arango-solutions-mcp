@@ -162,7 +162,7 @@ For remote/Docker deployments, Antigravity can connect via HTTP:
 | `MCP_CLASS_CONCURRENCY_LIMITS` | No | `standard=32,query=16,bulk=8,control=4,external=8` | Catalog limit-class concurrency ceilings |
 | `MCP_LIMITER_RETRY_AFTER_MS` | No | `250` | Retry hint for rejected global/class/tool concurrency |
 | `DEFAULT_AQL_MAX_RUNTIME` | No | `30.0` | Default per-query AQL max runtime in seconds. Zero and values above 30 are clamped to the non-disableable 30-second production ceiling. |
-| `LOG_AQL_QUERIES` | No | `false` | Whether to log the first 100 chars of user-supplied AQL. Default `false` because inline literals (`FILTER doc.token == "abc"`) can contain secrets. When `false`, the agent logs `<redacted len=N sha1=…>` instead. |
+| `LOG_AQL_QUERIES` | No | `false` | Whether to log the first 100 chars of user-supplied AQL. Default `false` because inline literals (`FILTER doc.token == "abc"`) can contain secrets. When `false`, the agent logs `<redacted len=N sha256=…>` instead. |
 | `CONNECT_MAX_RETRIES` | No | `5` | Maximum transient connection retries at startup (`0` disables retries) |
 | `CONNECT_INITIAL_BACKOFF` | No | `1.0` | Initial retry backoff in seconds, doubled up to 30 seconds |
 | `STARTUP_CONNECT_BUDGET` | No | `8.0` | Seconds to spend on the initial ArangoDB connection before serving anyway. Keep well under the MCP client handshake ceiling (Claude Code: 30s) — a startup connect that outlives it never answers `initialize`, so the client drops every tool instead of reporting a database problem |
@@ -727,7 +727,7 @@ arango-solutions-mcp/
 │   ├── metrics.py
 │   └── telemetry.py
 │
-├── tests/                   # Pytest suite (439 test functions)
+├── tests/                   # Pytest suite (440 test functions)
 │   ├── conftest.py          # Auto-provisions Docker containers
 │   ├── test_app_factory.py
 │   ├── test_connectivity.py
@@ -882,7 +882,7 @@ pre-commit install
 | **Destructive operation guards** | `_system` database deletion blocked at both tool and agent levels |
 | **HTTP identity and authority** | Production OIDC validates discovery/JWKS, asymmetric JWT signatures, issuer, audience, expiry/not-before, operation scopes, and database allowlists. Effective authority intersects token, startup, catalog, and server-side credential policy. `MCP_AUTH_TOKEN` remains as an explicit legacy compatibility mode. |
 | **AQL query budget** | `DEFAULT_AQL_MAX_RUNTIME` (default `30s`) caps every `execute-aql-query`; per-call `max_runtime` override is also accepted. |
-| **AQL log redaction** | User-supplied AQL is logged as `<redacted len=N sha1=…>` by default; the sha1 prefix lets you correlate log lines for the same query without exposing literals. Set `LOG_AQL_QUERIES=true` for plaintext debugging. |
+| **AQL log redaction** | User-supplied AQL is logged as `<redacted len=N sha256=…>` by default; the sha256 prefix lets you correlate log lines for the same query without exposing literals. Set `LOG_AQL_QUERIES=true` for plaintext debugging. |
 | **Secret hygiene** | Root password, `MCP_AUTH_TOKEN`, and the `password` parameter on `create-user` / `update-user` are typed as `pydantic.SecretStr`, so values are not reprinted in logs or `repr()` output. |
 
 ---
@@ -897,7 +897,7 @@ pre-commit install
 - **Hybrid search** — combine vector similarity with BM25 text relevance
 - **AQL-first** — built-in manuals, explain plans, and syntax validation
 - **Security by default** — AQL injection prevention, JS transaction gating, SSL verification, log redaction
-- **Self-testing** — 439 test functions across unit, framework, integration, and cluster tiers
+- **Self-testing** — 440 test functions across unit, framework, integration, and cluster tiers
 - **Cross-platform** — runs on macOS, Linux, Windows (via Docker)
 
 ## License
