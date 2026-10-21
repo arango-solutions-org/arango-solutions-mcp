@@ -507,7 +507,7 @@ implementation.
 | **Console entry point** | `src/arangodb_mcp/cli.py`, `src/arangodb_mcp/main.py` | Installed `arangodb-mcp` command, version reporting, logging, event loop policy, and transport bootstrap |
 | **ASGI composition** | `src/arangodb_mcp/asgi/*.py` | HTTP transport composition, public liveness/readiness routing, and middleware ordering |
 | **HTTP middleware** | `src/arangodb_mcp/middleware/*.py` | MCP request-metadata validation, Host/Origin enforcement, and request context |
-| **Server** | `src/arangodb_mcp/server.py` | FastMCP instance, LLM-facing instructions, tool registration via side-effect imports |
+| **Server** | `src/arangodb_mcp/server.py` | MCP SDK 2.x `MCPServer` instance, LLM-facing instructions, tool registration via side-effect imports |
 | **Configuration** | `src/arangodb_mcp/config.py` | `pydantic-settings` with `ARANGO_*` env prefix, SSL validation, `.env` support |
 | **Connector** | `src/arangodb_mcp/arango_connector.py` | `ArangoDBConnector` singleton, `connect`/`disconnect`, `get_db`/`get_system_db`, health check, async lifespan |
 | **Tools** | `src/arangodb_mcp/mcp_tools/*.py` | Thin `@mcp_app.tool` wrappers with Pydantic `Field` descriptions; delegate to agents |
@@ -523,7 +523,7 @@ implementation.
 | **Decorator-based error handling** | `handle_arango_errors` in `agent_base.py` eliminates try/except boilerplate across all 15 agents. The decorator accepts an `on_arango_error: Callable[[Exception], dict \| None]` callback so agents like Cluster (single-server detection) and Backup (Enterprise-only detection) can rewrite specific error responses without hand-rolling try/except blocks. |
 | **Async wrapper** | `ArangoAgentBase.run_sync()` wraps every synchronous python-arango call in `asyncio.to_thread()` so blocking driver I/O does not stall the FastMCP event loop. |
 | **Tool-layer support (no-agent tools)** | The embedding / pattern-memory tools (§2.16–2.17) run directly in the tool layer without an agent. `src/arangodb_mcp/mcp_tools/_support.py` gives them the same two guarantees the agent base provides: `run_sync` (off-loop dispatch of blocking driver calls) and `arango_error_result` (the standardized `{error, error_code}` envelope). |
-| **Bearer-token auth** | `auth_middleware.BearerTokenAuthMiddleware` is an ASGI middleware that wraps the FastMCP `streamable_http_app()` / `sse_app()` whenever `MCP_AUTH_TOKEN` is set, validating the `Authorization` header in constant time before forwarding the scope. |
+| **Bearer-token auth** | `auth_middleware.BearerTokenAuthMiddleware` is an ASGI middleware that wraps the MCP SDK `streamable_http_app()` / `sse_app()` whenever `MCP_AUTH_TOKEN` is set, validating the `Authorization` header in constant time before forwarding the scope. |
 | **Bind variable injection** | All user-provided values use AQL bind variables (`@param`); identifiers validated by `aql_utils` |
 | **Lifespan management** | `arango_db_lifespan` async context manager ensures clean connect/disconnect tied to server lifecycle |
 | **Configuration-as-code** | `pydantic-settings` with env vars, `.env` file, and runtime validation |
@@ -660,7 +660,7 @@ docker run -d -p 8000:8000 \
 The suite is organized into three tiers based on what infrastructure they need:
 
 * **Mock** — pure-Python unit tests; run anywhere, no Docker, no ArangoDB.
-* **E2E (framework)** — exercise the FastMCP server / tool registry by introspection; no live ArangoDB required.
+* **E2E (framework)** — exercise the MCPServer / tool registry by introspection; no live ArangoDB required.
 * **Integration** — require a running ArangoDB instance (auto-provisioned by `conftest.py` via Docker, or supplied via `ARANGO_HOSTS`).
 
 | Test File | Tier | Areas Covered |
@@ -684,7 +684,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `test_mcp_tools.py` | Mock | Verifies each `@mcp_app.tool` wrapper builds the correct operation dict and delegates to its agent's `arun` |
 | `test_embedding_tools.py` | Mock | `embed-text` / `embed-document` plus shared helpers — standardized errors, off-loop dispatch, TLS-env sanitisation, API-key guard, trace/header propagation, and dependency spans |
 | `test_pattern_memory_tools.py` | Mock | The five shared-memory tools — BM25 fallback path, provenance upsert, usage bump + missing-key reporting, standardized errors, off-loop dispatch |
-| `test_protocol_interop.py` | E2E (framework) | Pinned 2026-07-28 stateless initialize/list/call flow plus headerless 2025 compatibility |
+| `test_protocol_interop.py` | E2E (framework) | Pinned 2026-07-28 stateless discover/list/call flow plus headerless 2025 compatibility |
 | `test_protocol_metadata.py` | ASGI contract | MCP 2026-07-28 routing-header matching, Base64 sentinel decoding, unsupported-version errors, and legacy compatibility |
 | `test_protocol_security.py` | ASGI contract | Official SDK Host and Origin allowlist behavior |
 | `test_mcp_content.py` | MCP contract | Exact resources/templates/prompts inventory plus manual, schema, profile, status, and safe-workflow round trips |
@@ -724,7 +724,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 |---------|---------|---------|
 | `python` | ^3.10 | Language runtime |
 | `python-arango` | ^8.1 | ArangoDB Python driver |
-| `mcp` | ^1.0 | Model Context Protocol SDK |
+| `mcp` | ^2.3 | Model Context Protocol SDK (2.x `MCPServer`) |
 | `pydantic` | ^2.0 | Data validation and serialization |
 | `pydantic-settings` | ^2.0 | Environment-based configuration |
 | `anyio` | ^4.5 | Async I/O compatibility |
@@ -786,7 +786,7 @@ but DEP-003 and MAT-001 remain PARTIAL until those artifacts exist externally.
 
 1. Create an agent in `src/arangodb_mcp/agents/` inheriting from `ArangoAgentBase`.
 2. Use `self.resolve_db(...)` to get an authenticated `(db, resolved_db_name)` tuple instead of touching `arango_connector` directly.
-3. Wrap every blocking python-arango call in `await self.run_sync(...)` so the call runs in a thread and does not block the FastMCP event loop.
+3. Wrap every blocking python-arango call in `await self.run_sync(...)` so the call runs in a thread and does not block the server event loop.
 4. Apply `@handle_arango_errors` to `arun` for standard error handling. If the agent needs to rewrite specific ArangoDB errors (e.g. Enterprise-only or cluster-only paths), pass an `on_arango_error` callback that returns a custom dict for the cases it wants to override and `None` to fall through to the standard error envelope.
 5. Create tool definitions in `src/arangodb_mcp/mcp_tools/` using `@mcp_app.tool` with Pydantic `Field` descriptions; for any password / secret parameter, use `pydantic.SecretStr` so values are not echoed in logs.
 6. Import the new tool module in both `src/arangodb_mcp/mcp_tools/__init__.py` and `src/arangodb_mcp/server.py`.
