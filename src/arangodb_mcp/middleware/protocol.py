@@ -6,7 +6,9 @@ import base64
 import binascii
 import json
 from collections.abc import Awaitable, Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
+
+from mcp.server.caching import CacheableMethod
 
 ASGIApp = Callable[
     [
@@ -21,8 +23,13 @@ ProtocolMode = Literal["strict", "legacy", "auto"]
 CURRENT_PROTOCOL_VERSION = "2026-07-28"
 _VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
 _NAMED_METHODS = frozenset({"tools/call", "resources/read", "prompts/get"})
-_CACHE_HINTS: dict[str, tuple[int, str]] = {
-    "tools/list": (300_000, "public"),
+# (ttl_ms, scope) per cacheable method: the server's caching policy. It is passed to the
+# MCP SDK's native cache hints (see server.py) and applied here as a fallback. "public"
+# means a result may be shared across authorization contexts, so tools/list is "private":
+# under OIDC each caller's tool list is filtered by its token scopes.
+CacheScope = Literal["public", "private"]
+CACHE_HINTS: dict[CacheableMethod, tuple[int, CacheScope]] = {
+    "tools/list": (300_000, "private"),
     "prompts/list": (300_000, "public"),
     "resources/list": (60_000, "private"),
     "resources/read": (60_000, "private"),
@@ -114,7 +121,9 @@ class ProtocolMetadataMiddleware:
             return
 
         method = message.get("method")
-        cache_hint = _CACHE_HINTS.get(method) if isinstance(method, str) else None
+        cache_hint = (
+            CACHE_HINTS.get(cast(CacheableMethod, method)) if isinstance(method, str) else None
+        )
         if cache_hint is None:
             await self.app(scope, self._replay(body), send)
             return

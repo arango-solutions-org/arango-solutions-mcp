@@ -12,7 +12,7 @@ from arangodb_mcp.middleware.transport_security import MCPTransportSecurityMiddl
 from arangodb_mcp.observability.http import MetricsRouter
 from arangodb_mcp.oidc import OIDCConfig, OIDCValidator, ProtectedResourceRouter
 from arangodb_mcp.policy.credentials import StaticCredentialProvider
-from arangodb_mcp.server import mcp_app
+from arangodb_mcp.server import HTTP_OPTIONS, mcp_app
 
 from .health import PROBE_PATHS, ProbeRouter, health_app
 
@@ -69,15 +69,26 @@ def create_http_app(
     if plain_token and settings.identity.mcp_oidc_issuer:
         raise ValueError("Legacy bearer and OIDC authentication cannot both be enabled")
     if transport == "streamable-http":
-        app = mcp_app.streamable_http_app()
+        app = mcp_app.streamable_http_app(
+            streamable_http_path=HTTP_OPTIONS.streamable_http_path,
+            json_response=HTTP_OPTIONS.json_response,
+            stateless_http=HTTP_OPTIONS.stateless_http,
+            max_request_body_size=HTTP_OPTIONS.max_request_body_size,
+            transport_security=HTTP_OPTIONS.transport_security,
+            host=settings.server.mcp_host,
+        )
         app = ProtocolMetadataMiddleware(
             app,
             mode=settings.server.mcp_protocol_mode,
-            mcp_path=mcp_app.settings.streamable_http_path,
-            max_body_size=mcp_app.settings.max_request_body_size,
+            mcp_path=HTTP_OPTIONS.streamable_http_path,
+            max_body_size=HTTP_OPTIONS.max_request_body_size,
         )
     elif transport == "sse":
-        app = mcp_app.sse_app()
+        app = mcp_app.sse_app(
+            max_request_body_size=HTTP_OPTIONS.max_request_body_size,
+            transport_security=HTTP_OPTIONS.transport_security,
+            host=settings.server.mcp_host,
+        )
     else:
         raise ValueError(f"Unsupported HTTP transport: {transport}")
 
@@ -107,8 +118,8 @@ def create_http_app(
     if transport == "streamable-http":
         app = MCPTransportSecurityMiddleware(
             app,
-            mcp_app.settings.transport_security,
-            mcp_path=mcp_app.settings.streamable_http_path,
+            HTTP_OPTIONS.transport_security,
+            mcp_path=HTTP_OPTIONS.streamable_http_path,
         )
 
     app = MetricsRouter(

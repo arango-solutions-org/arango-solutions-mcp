@@ -226,22 +226,19 @@ def run_harness(args: argparse.Namespace) -> None:
         if unauthorized_status != 401:
             raise HarnessError(f"Unauthenticated MCP request returned {unauthorized_status}")
 
-        initialized_status, initialized = _strict_mcp_post(
+        # 2026-07-28 is the stateless core: there is no initialize handshake, so the
+        # authenticated discovery step is server/discover.
+        discovered_status, discovered = _strict_mcp_post(
             mcp_url,
             token,
-            method="initialize",
-            params={
-                "protocolVersion": PROTOCOL_VERSION,
-                "capabilities": {},
-                "clientInfo": {"name": "phase4-harness", "version": "1.0"},
-            },
+            method="server/discover",
+            params={},
             request_id=1,
         )
-        if (
-            initialized_status != 200
-            or initialized.get("result", {}).get("protocolVersion") != PROTOCOL_VERSION
+        if discovered_status != 200 or PROTOCOL_VERSION not in discovered.get("result", {}).get(
+            "supportedVersions", []
         ):
-            raise HarnessError(f"Authenticated MCP initialize failed: {initialized}")
+            raise HarnessError(f"Authenticated MCP server/discover failed: {discovered}")
 
         call_status, called = _strict_mcp_post(
             mcp_url,

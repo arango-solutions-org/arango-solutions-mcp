@@ -8,10 +8,10 @@ from contextlib import nullcontext
 from typing import Any, Callable
 
 import anyio
-from mcp.server.fastmcp.exceptions import ToolError
-from mcp.server.fastmcp.tools.base import Tool
-from mcp.server.fastmcp.tools.tool_manager import ToolManager
-from mcp.types import TextContent
+from mcp.server.mcpserver.exceptions import ToolError
+from mcp.server.mcpserver.tools.base import Tool
+from mcp.server.mcpserver.tools.tool_manager import ToolManager
+from mcp.types import CallToolResult, TextContent
 from opentelemetry.trace import Status, StatusCode
 from pydantic import TypeAdapter
 
@@ -263,7 +263,7 @@ class PolicyToolManager(ToolManager):
                 if self.result_contract == "v3":
                     structured = _JSON_VALUE.dump_python(normalized, mode="json")
                     content = [TextContent(type="text", text=json.dumps(structured, indent=2))]
-                    return content, structured
+                    return CallToolResult(content=content, structured_content=structured)
                 return tool.fn_metadata.convert_result(normalized)
             return normalized
 
@@ -369,7 +369,7 @@ class PolicyToolManager(ToolManager):
             if self.result_contract == "v3":
                 structured = _JSON_VALUE.dump_python(normalized, mode="json")
                 content = [TextContent(type="text", text=json.dumps(structured, indent=2))]
-                return content, structured
+                return CallToolResult(content=content, structured_content=structured)
             return tool.fn_metadata.convert_result(normalized)
         return normalized
 
@@ -409,7 +409,7 @@ def _violation_result(violation: LimitViolation) -> dict[str, Any]:
 
 def _result_outcome(result: Any) -> str:
     """Map every result shape to the fixed success/denied/error vocabulary."""
-    candidate = result[1] if isinstance(result, tuple) and len(result) == 2 else result
+    candidate = result.structured_content if isinstance(result, CallToolResult) else result
     if not isinstance(candidate, dict):
         return "success"
     if candidate.get("status") == "success":

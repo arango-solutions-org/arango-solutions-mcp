@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.caching import CacheHint
+from mcp.server.mcpserver import MCPServer
 from starlette.testclient import TestClient
 
-from arangodb_mcp.middleware.protocol import ProtocolMetadataMiddleware, ProtocolMode
+from arangodb_mcp.middleware.protocol import CACHE_HINTS, ProtocolMetadataMiddleware, ProtocolMode
 from arangodb_mcp.protocol_compat import (
     COMPATIBILITY_SUNSET,
     MCP_2026_VERSION,
@@ -18,13 +19,18 @@ from arangodb_mcp.protocol_compat import (
 
 def _probe_app(mode: ProtocolMode):
     enable_mcp_2026_negotiation()
-    probe = FastMCP("interop-probe", stateless_http=True, json_response=True)
+    probe = MCPServer(
+        name="interop-probe",
+        cache_hints={m: CacheHint(ttl_ms=t, scope=c) for m, (t, c) in CACHE_HINTS.items()},
+    )
 
     @probe.tool()
     def echo(value: str) -> dict[str, str]:
         return {"value": value}
 
-    return ProtocolMetadataMiddleware(probe.streamable_http_app(), mode=mode)
+    return ProtocolMetadataMiddleware(
+        probe.streamable_http_app(stateless_http=True, json_response=True), mode=mode
+    )
 
 
 def test_protocol_bridge_is_current_and_time_bounded():
@@ -65,9 +71,12 @@ def _strict_post(
     )
 
 
-def test_strict_2026_stateless_initialize_list_and_call_flow():
+def test_strict_2026_stateless_discover_list_and_call_flow():
+    # 2026-07-28 is the stateless core: no initialize handshake. Clients discover the
+    # server with server/discover and send protocol metadata on every request.
     with TestClient(_probe_app("strict")) as client:
-        initialized = _strict_post(
+        discovered = _strict_post(client, "server/discover", {}, request_id=1)
+        handshake = _strict_post(
             client,
             "initialize",
             {
@@ -75,25 +84,29 @@ def test_strict_2026_stateless_initialize_list_and_call_flow():
                 "capabilities": {},
                 "clientInfo": {"name": "pinned-test-client", "version": "1.0"},
             },
-            request_id=1,
+            request_id=2,
         )
-        listed = _strict_post(client, "tools/list", {}, request_id=2)
+        listed = _strict_post(client, "tools/list", {}, request_id=3)
         called = _strict_post(
             client,
             "tools/call",
             {"name": "echo", "arguments": {"value": "ok"}},
-            request_id=3,
+            request_id=4,
             name="echo",
         )
 
-    assert initialized.status_code == 200
-    assert initialized.json()["result"]["protocolVersion"] == "2026-07-28"
-    assert "mcp-session-id" not in initialized.headers
+    assert discovered.status_code == 200
+    discover_result = discovered.json()["result"]
+    assert "2026-07-28" in discover_result["supportedVersions"]
+    assert discover_result["_meta"]["io.modelcontextprotocol/serverInfo"]["name"] == "interop-probe"
+    assert "mcp-session-id" not in discovered.headers
+    assert handshake.json()["error"]["code"] == -32601  # initialize is not a 2026-07-28 method
     list_result = listed.json()["result"]
     assert [tool["name"] for tool in list_result["tools"]] == ["echo"]
     assert list_result["resultType"] == "complete"
     assert list_result["ttlMs"] == 300_000
-    assert list_result["cacheScope"] == "public"
+    # tools/list is filtered per caller under OIDC, so it must never be shared ("public").
+    assert list_result["cacheScope"] == "private"
     assert called.json()["result"]["isError"] is False
     assert '"value": "ok"' in called.json()["result"]["content"][0]["text"]
 
