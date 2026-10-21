@@ -727,7 +727,7 @@ arango-solutions-mcp/
 │   ├── metrics.py
 │   └── telemetry.py
 │
-├── tests/                   # Pytest suite (440 test functions)
+├── tests/                   # Pytest suite (445 test functions)
 │   ├── conftest.py          # Auto-provisions Docker containers
 │   ├── test_app_factory.py
 │   ├── test_connectivity.py
@@ -897,7 +897,7 @@ pre-commit install
 - **Hybrid search** — combine vector similarity with BM25 text relevance
 - **AQL-first** — built-in manuals, explain plans, and syntax validation
 - **Security by default** — AQL injection prevention, JS transaction gating, SSL verification, log redaction
-- **Self-testing** — 440 test functions across unit, framework, integration, and cluster tiers
+- **Self-testing** — 445 test functions across unit, framework, integration, and cluster tiers
 - **Cross-platform** — runs on macOS, Linux, Windows (via Docker)
 
 ## License

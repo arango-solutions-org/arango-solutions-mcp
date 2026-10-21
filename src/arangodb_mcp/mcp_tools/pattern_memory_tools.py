@@ -916,6 +916,12 @@ async def save_pattern(
     req_id) are preserved across syncs; only the non-empty status/evidence fields
     passed are merged on re-detection. To close a gap, pass status='closed' with
     closed_at / closed_evidence.
+
+    Pass branch / commit on every call (/prd-sync supplies them from its Phase 0
+    branch guard). They record which branch the alert was true on, and on a close
+    they are additionally stamped as closed_branch / closed_commit -- a close
+    recorded on a feature branch is provisional until that commit reaches the
+    default branch.
     """,
 )
 async def save_drift_alert(
@@ -929,6 +935,12 @@ async def save_drift_alert(
     detected_at: str = Field(default="", description="ISO timestamp; defaults to now (UTC)."),
     closed_at: str = Field(default="", description="ISO timestamp when the gap was closed."),
     closed_evidence: str = Field(default="", description="file:line proving implementation."),
+    branch: str = Field(
+        default="",
+        description="Git branch the audit ran on. /prd-sync sends this on every write; "
+        "without it a drift alert cannot say which branch it was true on.",
+    ),
+    commit: str = Field(default="", description="Short git commit the audit ran against."),
     collection_name: str = Field(default="drift_alerts", description="Alerts collection."),
     database_name: str = Field(
         default="", description="Target database (default: server default)."
@@ -952,11 +964,24 @@ async def save_drift_alert(
             "gap_description": gap_description,
             "detected_at": detected_at or now,
             "detected_by": _current_user(),
+            # Branch provenance. Merged (not insert-only) like the other non-identity
+            # fields: on re-detection these answer "which branch is this gap STILL true
+            # on", which is the question a re-sync is asking. First-detection branch is
+            # deliberately not kept -- drift_alerts already carries ~18 fields of schema
+            # sediment and a second pair would add to it for a question nobody asks.
+            "branch": branch,
+            "commit": commit,
         }
         if status == "closed":
             full["closed_at"] = closed_at or now
             full["closed_evidence"] = closed_evidence
             full["closed_by"] = _current_user()
+            # Where the close happened, stamped exactly like closed_at/closed_by. This
+            # is the pair with teeth: a close recorded on a feature branch is provisional
+            # until that commit reaches the default branch, and without closed_branch
+            # there is no way to tell those two cases apart after the fact.
+            full["closed_branch"] = branch
+            full["closed_commit"] = commit
         # Merge subset: everything but identity, dropping empty strings so a
         # re-detect never blanks a previously-set field (matches the old
         # upsert-document search_fields/update_data semantics). detected_by is
@@ -998,17 +1023,25 @@ async def save_drift_alert(
     you actually applied, NOT every result that was shown. This is the APPLY side of the
     read-path funnel: /pattern-search records what was surfaced; this records what was
     reused. One call, no AQL needed.
+
+    State `outcome` explicitly. A pattern that was tried and did NOT help is
+    recorded with outcome='failed' -- it is a real and useful signal, not a
+    confession. Do not dismiss such a pattern as "not reused": dismissal means
+    reviewed and never tried, which is a different thing and loses the evidence.
     """,
 )
 async def pattern_applied(
     keys: List[str] = Field(description="_key(s) of the pattern(s) actually applied."),
     outcome: str = Field(
         default="worked",
-        description="Apply outcome: 'worked' (default) or "
-        "'failed'. 'failed' records negative signal (bumps applied_failed) "
-        "WITHOUT boosting usage_count / last_used, so a pattern that was tried "
-        "but did not help is down-weighted in /pattern-search ranking rather "
-        "than rewarded.",
+        description="Apply outcome: 'worked' or 'failed' -- state it explicitly. "
+        "'failed' records negative signal (bumps applied_failed) WITHOUT boosting "
+        "usage_count / last_used, so a pattern that was tried but did not help is "
+        "down-weighted in /pattern-search ranking rather than rewarded. A pattern "
+        "FAILED if, after you adapted it: the checks it was meant to make pass are "
+        "still failing, you reverted it for a different approach, or it introduced a "
+        "defect you then had to fix. Any other value is rejected -- a typo must never "
+        "be recorded as a success.",
     ),
     collection_name: str = Field(default="shared_patterns", description="Patterns collection."),
     database_name: str = Field(
@@ -1018,7 +1051,20 @@ async def pattern_applied(
     try:
         if not keys:
             return {"result": {"error": "no keys provided"}}
-        worked = str(outcome).strip().lower() != "failed"
+        # Closed value set. This was `!= "failed"`, which made EVERY unrecognised
+        # value -- "success", "ok", "Failed " with a stray space, a typo -- record a
+        # positive signal. Combined with the default, the flag could only ever say
+        # yes: 113 applies and 0 failures across 119 patterns, so success_rate was a
+        # constant and the ranking multiplier built on it ranked nothing.
+        normalized = str(outcome).strip().lower()
+        if normalized not in ("worked", "failed"):
+            return {
+                "result": {
+                    "error": f"outcome must be 'worked' or 'failed', got {outcome!r}",
+                    "error_code": "invalid_outcome",
+                }
+            }
+        worked = normalized != "failed"
         db = await run_sync(arango_connector.get_db, database_name or None)
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         updated = await run_sync(
