@@ -240,7 +240,7 @@ def verify() -> list[str]:
         _require(
             errors,
             content,
-            "https://github.com/arango-solutions/arango-solutions-mcp",
+            "https://github.com/arango-solutions-org/arango-solutions-mcp",
             relative_path,
         )
 

@@ -29,7 +29,7 @@ revision available for rollback. Database and Secret rollback remain operator re
 
 ## Feedback
 
-Open a [GitHub issue](https://github.com/arango-solutions/arango-solutions-mcp/issues) if a
+Open a [GitHub issue](https://github.com/arango-solutions-org/arango-solutions-mcp/issues) if a
 planned removal creates an unreasonable migration burden. Vulnerability concerns must use
-[GitHub private security advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new),
+[GitHub private security advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new),
 not a public issue.

@@ -2,7 +2,7 @@
 
 ## Community support route
 
-Use [GitHub Issues](https://github.com/arango-solutions/arango-solutions-mcp/issues) for
+Use [GitHub Issues](https://github.com/arango-solutions-org/arango-solutions-mcp/issues) for
 installation questions, reproducible defects, and documentation gaps. Include the server,
 chart, Python, Kubernetes, and ArangoDB versions; relevant redacted logs; and reproduction
 steps. Never post credentials, tokens, private keys, production data, or tenant identifiers.
@@ -22,7 +22,7 @@ depends on severity, reproducibility, maintainer availability, and upstream depe
 ## Security reports
 
 Do not use public issues for vulnerabilities. Submit suspected vulnerabilities through
-[GitHub private security advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new)
+[GitHub private security advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new)
 using the process in [SECURITY.md](SECURITY.md).
 
 ArangoDB product support and commercial support arrangements are separate from this
