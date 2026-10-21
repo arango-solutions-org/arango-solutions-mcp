@@ -87,7 +87,7 @@ def _aql_log_fragment(aql_query: str) -> str:
     """Return a log-safe representation of a user-supplied AQL query.
 
     By default this is structural metadata only — query length and a
-    sha1 prefix to correlate log lines belonging to the same query
+    sha256 prefix to correlate log lines belonging to the same query
     without exposing literals. Set ``MCP_LOG_AQL_QUERIES=true`` (i.e.
     ``settings.server.log_aql_queries = True``) to log the first 100
     chars of the actual query for debugging.
@@ -96,8 +96,8 @@ def _aql_log_fragment(aql_query: str) -> str:
 
     if settings.server.log_aql_queries:
         return f"{aql_query[:100]}..." if len(aql_query) > 100 else aql_query
-    digest = hashlib.sha1(aql_query.encode("utf-8")).hexdigest()[:10]
-    return f"<redacted len={len(aql_query)} sha1={digest}>"
+    digest = hashlib.sha256(aql_query.encode("utf-8")).hexdigest()[:10]
+    return f"<redacted len={len(aql_query)} sha256={digest}>"
 
 
 class AQLExecutionAgent(ArangoAgentBase):

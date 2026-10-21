@@ -42,7 +42,7 @@ def test_mcp_image_has_dependency_aware_readiness_healthcheck():
     assert "poetry build --format wheel" in dockerfile
     assert ".venv/bin/pip install --no-deps dist/*.whl" in dockerfile
     assert (
-        "COPY --from=builder --chown=root:root " "/opt/arangodb-mcp/.venv /opt/arangodb-mcp/.venv"
+        "COPY --from=builder --chown=root:root /opt/arangodb-mcp/.venv /opt/arangodb-mcp/.venv"
     ) in dockerfile
     assert "COPY . ." not in dockerfile
     assert "chmod -R a-w /opt/arangodb-mcp/.venv" in dockerfile
@@ -233,9 +233,9 @@ def test_phase4_and_phase5_ci_harnesses_make_deployment_contracts_mechanical():
     assert "chart-dist/*.tgz" in release
 
     advisory_route = (
-        "https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new"
+        "https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new"
     )
-    issue_route = "https://github.com/arango-solutions/arango-solutions-mcp/issues"
+    issue_route = "https://github.com/arango-solutions-org/arango-solutions-mcp/issues"
     assert "@arthurkeen" in _read(".github/CODEOWNERS")
     for document in (
         "CONTRIBUTING.md",

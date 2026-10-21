@@ -384,8 +384,7 @@ async def _send_auth_error(send: Send, error: OIDCValidationError) -> None:
                 (
                     b"www-authenticate",
                     (
-                        f'Bearer error="{error.code}", '
-                        f'error_description="{escaped_description}"'
+                        f'Bearer error="{error.code}", error_description="{escaped_description}"'
                     ).encode("latin-1"),
                 ),
             ],

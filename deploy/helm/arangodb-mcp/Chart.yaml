@@ -4,9 +4,9 @@ description: A hardened Helm chart for the ArangoDB MCP Server
 type: application
 version: 0.1.0
 appVersion: "2.0.0"
-home: https://github.com/arango-solutions/arango-solutions-mcp
+home: https://github.com/arango-solutions-org/arango-solutions-mcp
 sources:
-  - https://github.com/arango-solutions/arango-solutions-mcp
+  - https://github.com/arango-solutions-org/arango-solutions-mcp
 maintainers:
   - name: Arthur Keen
     url: https://github.com/arthurkeen

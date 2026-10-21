@@ -14,7 +14,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Iterator, Mapping
 
-TOKEN_VERSION = 1
+TOKEN_VERSION = 2
 MAX_CONFIRMATION_TTL_SECONDS = 300
 
 
@@ -50,8 +50,15 @@ _pending_confirmation: ContextVar[PendingConfirmation | None] = ContextVar(
 )
 
 
-def canonical_parameters_hash(arguments: Mapping[str, Any]) -> str:
-    """Hash canonical JSON arguments so approval cannot be reused with changed parameters."""
+def canonical_parameters_hash(arguments: Mapping[str, Any], key: bytes) -> str:
+    """HMAC-SHA256 of the canonical JSON arguments, keyed with the confirmation secret.
+
+    Binds an approval to exact parameters so it cannot be reused with changed ones.
+    The digest travels inside the token's readable payload, and arguments can carry
+    low-entropy values (e.g. a create-user password), so it is keyed: without the
+    secret it cannot be brute-forced back to those values. (Token version 2; version
+    1 used an unkeyed SHA-256.)
+    """
     encoded = json.dumps(
         arguments,
         sort_keys=True,
@@ -59,7 +66,7 @@ def canonical_parameters_hash(arguments: Mapping[str, Any]) -> str:
         ensure_ascii=True,
         default=str,
     ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return hmac.new(key, encoded, hashlib.sha256).hexdigest()
 
 
 def _b64encode(value: bytes) -> str:
@@ -96,7 +103,7 @@ def mint_confirmation_token(
         "jti": secrets.token_urlsafe(18),
         "actor": actor,
         "action": action,
-        "parameters_sha256": canonical_parameters_hash(arguments),
+        "parameters_sha256": canonical_parameters_hash(arguments, secret.encode("utf-8")),
         "iat": issued_at,
         "exp": issued_at + ttl_seconds,
     }
@@ -182,7 +189,7 @@ class ConfirmationVerifier:
                 "confirmation_action_mismatch",
                 "Confirmation token is bound to a different action",
             )
-        expected_parameters = canonical_parameters_hash(arguments)
+        expected_parameters = canonical_parameters_hash(arguments, self._secret)
         if not hmac.compare_digest(claims.parameters_sha256, expected_parameters):
             raise ConfirmationError(
                 "confirmation_parameters_mismatch",

@@ -6,6 +6,11 @@ updates:
       interval: weekly
     groups:
       python-dependencies:
+        # Majors are excluded so each arrives as its own PR: one breaking major
+        # (e.g. mcp 2.x in #23) must not block a group of safe minor/patch updates.
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
 
@@ -15,6 +20,11 @@ updates:
       interval: weekly
     groups:
       github-actions:
+        # Majors are excluded so each arrives as its own PR: one breaking major
+        # (e.g. mcp 2.x in #23) must not block a group of safe minor/patch updates.
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
 

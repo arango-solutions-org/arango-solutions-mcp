@@ -93,7 +93,6 @@ def normalize_result(
     current_date = today or date.today()
     if current_date >= LEGACY_RESULT_CONTRACT_SUNSET:
         raise ResultContractError(
-            "The legacy MCP result contract expired on "
-            f"{LEGACY_RESULT_CONTRACT_SUNSET.isoformat()}"
+            f"The legacy MCP result contract expired on {LEGACY_RESULT_CONTRACT_SUNSET.isoformat()}"
         )
     return result

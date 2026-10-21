@@ -99,5 +99,5 @@ not authorization for every MCP operation or database health beyond the connecto
 ## Reporting
 
 Do not open a public issue for a suspected vulnerability. Use
-[GitHub private security advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new)
+[GitHub private security advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new)
 as described in [SECURITY.md](../SECURITY.md).
