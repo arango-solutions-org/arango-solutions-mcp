@@ -16,8 +16,8 @@ def test_security_workflow_preserves_codeql_and_dependency_audit():
     workflow = _read(".github/workflows/security.yml")
     release = _read(".github/workflows/release.yml")
 
-    assert "github/codeql-action/init@v3" in workflow
-    assert "github/codeql-action/analyze@v3" in workflow
+    assert "github/codeql-action/init@v4" in workflow
+    assert "github/codeql-action/analyze@v4" in workflow
     assert "poetry run python -m pip_audit" in workflow
     assert "--ignore-vuln" not in workflow
     assert 'tags:\n      - "v*.*.*"' in release
