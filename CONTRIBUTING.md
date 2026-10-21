@@ -4,7 +4,7 @@ Thank you for improving the ArangoDB MCP Server.
 
 ## Start with an issue
 
-Use [GitHub Issues](https://github.com/arango-solutions/arango-solutions-mcp/issues) for
+Use [GitHub Issues](https://github.com/arango-solutions-org/arango-solutions-mcp/issues) for
 bug reports, feature proposals, and contribution coordination. Search existing issues first
 and include the affected version, deployment mode, expected behavior, actual behavior, and a
 minimal reproduction. Do not include credentials, access tokens, customer data, or other
@@ -12,7 +12,7 @@ sensitive material.
 
 Suspected vulnerabilities must not be filed publicly. Follow
 [SECURITY.md](SECURITY.md) and use
-[GitHub private security advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new).
+[GitHub private security advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new).
 
 ## Development workflow
 

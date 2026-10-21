@@ -4,7 +4,7 @@
 **Current Product Version:** 2.0.0
 **Last Updated:** August 6, 2026
 **Status:** Requirement-level tracking; approved v3 requirements are not implementation claims
-**Repository:** [arango-solutions/arango-solutions-mcp](https://github.com/arango-solutions/arango-solutions-mcp)
+**Repository:** [arango-solutions-org/arango-solutions-mcp](https://github.com/arango-solutions-org/arango-solutions-mcp)
 
 ---
 
@@ -446,9 +446,9 @@ implementation.
 
 | ID | State | Owner | Requirement and acceptance gate | Required evidence |
 |----|-------|-------|---------------------------------|-------------------|
-| REL-001 | PARTIAL | Quality | Required CI MUST be green and enforce a measured non-regression coverage floor. | STATIC: `.github/workflows/ci.yml:37-112`, `pyproject.toml:94-96`; TEST: Ruff, Mypy, 480 tests, 82.64% measured coverage, and the 79% floor pass locally; EXTERNAL: protected required checks blocked on repository-admin action tracked by [issue #6](https://github.com/arango-solutions/arango-solutions-mcp/issues/6) |
+| REL-001 | PARTIAL | Quality | Required CI MUST be green and enforce a measured non-regression coverage floor. | STATIC: `.github/workflows/ci.yml:37-112`, `pyproject.toml:94-96`; TEST: Ruff, Mypy, 480 tests, 82.64% measured coverage, and the 79% floor pass locally; EXTERNAL: protected required checks blocked on repository-admin action tracked by [issue #6](https://github.com/arango-solutions-org/arango-solutions-mcp/issues/6) |
 | REL-002 | PARTIAL | Security | CI MUST run dependency audit, CodeQL, secret scanning, and container/dependency vulnerability checks with a documented severity policy. | STATIC: `.github/dependabot.yml:1-24`, `.github/workflows/security.yml:1-104`, `SECURITY.md:17-60`; TEST: `tests/test_security_contract.py:12-85`, exception-free pip-audit, and local built-image Trivy gate passed; EXTERNAL: first CI secret/image scan run on this implementation pending |
-| REL-003 | CURRENT | Quality | A scheduled job MUST execute real multi-server cluster tests rather than deselecting them. | STATIC: `.github/workflows/cluster-nightly.yml:1-113`; TEST: `tests/test_cluster.py:1-225`, `tests/test_deployment_contract.py:54-63`; LIVE + EXTERNAL: [Nightly Cluster run 31068063574](https://github.com/arango-solutions/arango-solutions-mcp/actions/runs/31068063574) completed successfully on 2026-08-05 against the pinned three-machine deployment |
+| REL-003 | CURRENT | Quality | A scheduled job MUST execute real multi-server cluster tests rather than deselecting them. | STATIC: `.github/workflows/cluster-nightly.yml:1-113`; TEST: `tests/test_cluster.py:1-225`, `tests/test_deployment_contract.py:54-63`; LIVE + EXTERNAL: [Nightly Cluster run 31068063574](https://github.com/arango-solutions-org/arango-solutions-mcp/actions/runs/31068063574) completed successfully on 2026-08-05 against the pinned three-machine deployment |
 | REL-004 | PARTIAL | Protocol | CI MUST verify supported MCP transports and strict/legacy interoperability with pinned reference clients. | TEST: `tests/test_protocol_interop.py:64-139` covers strict/auto/legacy Streamable HTTP and `tests/test_app_factory.py:59-75` covers SSE/stdio composition; EXTERNAL: first CI run on this matrix pending |
 | REL-005 | CURRENT | Quality | Deterministic task replays MUST gate tool selection and destructive refusal; live-model evaluations MAY run as advisory nightly checks. | STATIC: `evals/data/tool_selection.v1.json`, `evals/data/destructive_refusal.v1.json`, `evals/run_quality_gates.py:40-92`, `.github/workflows/ci.yml:43-50`; TEST + LIVE: deterministic gate produced selection 90% and destructive refusal 100% on 2026-08-06 |
 | REL-006 | CURRENT | Quality | Retrieval quality and performance MUST have versioned in-repository baselines and blocking regression thresholds. | STATIC: `evals/data/retrieval_golden.v1.json`, `evals/baselines/quality.v1.json`, `evals/run_quality_gates.py:95-170`; TEST: `tests/test_quality_gates.py:15-43`; LIVE: v1 gate produced MRR@10 1.0, recall@5 1.0, p50 0.097ms, p95 0.323ms, p99 0.390ms on 2026-08-06 |
@@ -729,7 +729,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `pydantic-settings` | ^2.0 | Environment-based configuration |
 | `anyio` | ^4.5 | Async I/O compatibility |
 | `httpx` | ^0.28 | OIDC/JWKS and embedding HTTP client |
-| `pyjwt[crypto]` | ^2.13 | Asymmetric OIDC access-token verification |
+| `pyjwt[crypto]` | ^2.15.1 | Asymmetric OIDC access-token verification |
 | `prometheus-client` | ^0.26 | Bounded-cardinality metrics and ASGI exposition |
 | `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` | ^1.44 | Trace API, SDK, and OTLP/HTTP export |
 | `pyyaml` | ^6.0 | Canonical tool-catalog loading |
@@ -805,7 +805,7 @@ but DEP-003 and MAT-001 remain PARTIAL until those artifacts exist externally.
 | **Legacy authorization mode** | The temporary `MCP_AUTH_TOKEN` compatibility mode retains one configured database identity. Production multi-actor HTTP deployments use OIDC scope/profile/catalog intersection, token/server database allowlists, and server-resolved request credentials. |
 | **Connection pooling** | Driver pool/timeout tuning not yet exposed via configuration |
 | **Telemetry backend operations** | Metrics and OTLP export are implemented; long-term storage, dashboards, alert routing, and collector high availability remain deployment-operator responsibilities. |
-| **Cluster CI evidence** | Nightly/manual real-cluster workflow is active; [run 31068063574](https://github.com/arango-solutions/arango-solutions-mcp/actions/runs/31068063574) passed against the pinned three-machine deployment on 2026-08-05. |
+| **Cluster CI evidence** | Nightly/manual real-cluster workflow is active; [run 31068063574](https://github.com/arango-solutions-org/arango-solutions-mcp/actions/runs/31068063574) passed against the pinned three-machine deployment on 2026-08-05. |
 | **Artifact publication** | Wheel and immutable non-root image verification pass locally, but no PyPI or GHCR release artifact is externally published. |
 | **Release attestations** | Trusted publishing, SBOM, provenance, keyless signing, and verification are configured but have no external release evidence yet. |
 | **Governance publication** | Security, contribution, ownership, threat-model, support, and deprecation files exist locally but are not yet public. |

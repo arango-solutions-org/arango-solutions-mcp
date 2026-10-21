@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Do not open a public issue for a suspected vulnerability. Submit a private report through
-[GitHub Security Advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new)
+[GitHub Security Advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new)
 with the affected version, reproduction steps, impact, and any suggested mitigation.
 
 Maintainers will acknowledge a report within two business days, assign a severity within five
@@ -13,7 +13,7 @@ agreement. Scope covers vulnerabilities in this repository's supported code, con
 Helm chart; third-party infrastructure and unsupported modifications are outside that scope.
 
 Public support requests belong in
-[GitHub Issues](https://github.com/arango-solutions/arango-solutions-mcp/issues), following
+[GitHub Issues](https://github.com/arango-solutions-org/arango-solutions-mcp/issues), following
 [SUPPORT.md](SUPPORT.md). The system trust boundaries and residual risks are documented in
 [docs/threat-model.md](docs/threat-model.md).
 
@@ -76,6 +76,6 @@ above and must not be added as an untracked permanent ignore.
 
 The container scan has no active exceptions. `.trivyignore.yaml` keeps an empty list and a dated
 record of the two retired upstream-SBOM false positives tracked by
-[issue #5](https://github.com/arango-solutions/arango-solutions-mcp/issues/5): msgpack
+[issue #5](https://github.com/arango-solutions-org/arango-solutions-mcp/issues/5): msgpack
 (GHSA-6v7p-g79w-8964, retired 2026-09-24) and setuptools (CVE-2025-47273, retired 2026-10-21, when
 the Python 3.14 base image stopped shipping setuptools). A new exception follows the process above.

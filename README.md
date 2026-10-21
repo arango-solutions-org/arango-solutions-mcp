@@ -860,11 +860,11 @@ pre-commit install
 ## Support and Governance
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes.
-- Use [public GitHub Issues](https://github.com/arango-solutions/arango-solutions-mcp/issues)
+- Use [public GitHub Issues](https://github.com/arango-solutions-org/arango-solutions-mcp/issues)
   for community support and contribution coordination; scope and best-effort response targets are
   in [SUPPORT.md](SUPPORT.md).
 - Report vulnerabilities only through
-  [GitHub private security advisories](https://github.com/arango-solutions/arango-solutions-mcp/security/advisories/new).
+  [GitHub private security advisories](https://github.com/arango-solutions-org/arango-solutions-mcp/security/advisories/new).
 - Review the [threat model](docs/threat-model.md),
   [deprecation policy](docs/deprecation-policy.md), and [security policy](SECURITY.md).
 
