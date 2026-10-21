@@ -2,8 +2,35 @@
 
 **Product:** ArangoDB MCP Server<br>
 **Assessment date:** August 6, 2026 (full assessment); revised September 29, October 5 and October 21, 2026<br>
-**Repository baseline:** `main` at `b400a91` (PR [#7](https://github.com/arango-solutions-org/arango-solutions-mcp/pull/7) merged October 15; the MCP SDK 2.x migration, PR [#28](https://github.com/arango-solutions-org/arango-solutions-mcp/pull/28), merged October 21), no release tag. The history was rewritten on October 5 to purge a leaked credential, so commit ids quoted from before then belong to the rewritten history<br>
+**Repository baseline:** `main` at `363a7cb` (the MCP SDK 2.x migration, [#28](https://github.com/arango-solutions-org/arango-solutions-mcp/pull/28), and the CodeQL triage, [#30](https://github.com/arango-solutions-org/arango-solutions-mcp/pull/30), merged October 21), no release tag. The history was rewritten on October 5 to purge a leaked credential, so commit ids quoted from before then belong to the rewritten history<br>
 **Product version:** 2.0.0 (`pyproject.toml:3`, `src/arangodb_mcp/config.py:76`); next release is v3.0.0
+
+**Revision — October 21, 2026 (P0 closed): 82/100 — B+ (was 81).** The three P0 items that were
+still open earlier on October 21 are now complete. Each was verified externally, from the GitHub API
+or from CI on `main`.
+
+- `[V]` **CodeQL: 0 open alerts on `main`.** All 12 alerts ever raised are resolved.
+  - 7 are fixed. In [#30](https://github.com/arango-solutions-org/arango-solutions-mcp/pull/30), the
+    confirmation-token parameter digest became an HMAC keyed with the confirmation secret (token
+    version 2), the redacted log lines got a SHA-256 correlation prefix, and the test port probe binds
+    to loopback.
+  - 5 are dismissed with recorded reasons. Four clear-text-logging alerts have a data flow that starts
+    at a test fixture named `secret`. The fifth is CodeQL's password-storage heuristic firing on the
+    keyed HMAC.
+- `[V]` **`main` is protected,** confirmed by reading the protection back from the API.
+  - 10 required checks: every CI and Security job.
+  - Branches must be up to date and changes must come through pull requests, enforced for admins.
+  - Force pushes and deletion are disallowed.
+  - [Issue #6](https://github.com/arango-solutions-org/arango-solutions-mcp/issues/6) is closed. No
+    approving review is required, a maintainer decision while there is a single active maintainer.
+- `[V]` **Dependabot security alerts and security updates are enabled,** with 0 open alerts.
+- `[V]` **The pipeline is green:** CI 6/6 and Security 4/4 on `main` at `363a7cb`.
+
+Ecosystem and release maturity returns from **4 to 5**, its August level, because every adverse item
+behind the September 29 drop is now resolved with external evidence. It goes no higher: there is still
+no release, and adoption is 3 stars and 0 forks. PRD requirements REL-001 and REL-002 move from
+PARTIAL to CURRENT. Still `[U]`: revocation of the leaked key by its owner, and GitHub's purge of the
+old pull-request refs.
 
 **Revision — October 21, 2026: 81/100 — B+ (unchanged).** The pipeline went from red to fully
 green, and three newly published dependency advisories were each fixed within a day. The score holds
@@ -123,7 +150,7 @@ category scores and evidence are otherwise as of the August 6 assessment.
 
 ## Executive verdict
 
-**Overall: 81/100 — B+** (September 29 revision; 82 at the August 6 assessment)
+**Overall: 82/100 — B+** (October 21 revision, after the P0 item closed; 81 from September 29 to October 21; 82 at the August 6 assessment)
 
 This server is the **functional-breadth leader** in the comparison: its 83 verified tools cover
 documents, graphs, AQL (including measured query profiling and proven-equivalence query
@@ -249,7 +276,8 @@ The defensible market position is:
   `SUPPORT.md:1-29`, `docs/threat-model.md:1-104`, `docs/deprecation-policy.md:1-35`).
 
 At the August assessment the evidence-backed total was **82/B+**, eleven points above the Phase 0
-baseline. After the September 29 capture of adverse external evidence it is **81/B+**, still four
+baseline. It fell to **81/B+** on September 29, when adverse external evidence was captured, and returned
+to **82/B+** on October 21, once every item behind that drop was resolved and externally verified. That is five
 points above Neo4j's 77. Phase 4/5 implementation is recorded without changing category scores:
 publishing and governance still lack their EXTERNAL gates, and MAT-003 requires an independent
 post-30-day evidence review rather than a maintainer self-awarding an A.
@@ -294,14 +322,14 @@ such as Qdrant intentionally trade breadth for simplicity.
 | Rank | Server | Capability /20 | Ergonomics /15 | Security /15 | Reliability /15 | Operations /15 | Deployment /10 | Maturity /10 | Total | Grade | Evidence confidence |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | 1 | MongoDB MCP | 18 | 11 | 12 | 14 | 14 | 9 | 10 | **88** | **A-** | Medium-high |
-| 2 | **ArangoDB MCP Server** | **19** | **14** | **13** | **14** | **8** | **9** | **4** | **81** | **B+** | High static/test / medium-high external (CI captured) |
+| 2 | **ArangoDB MCP Server** | **19** | **14** | **13** | **14** | **8** | **9** | **5** | **82** | **B+** | High static/test / high external (CI, security, branch protection verified) |
 | 3 | Bytebase DBHub | 10 | 15 | 13 | 13 | 10 | 10 | 9 | **80** | **B+** | Medium-high |
 | 4 | Neo4j MCP | 10 | 14 | 13 | 13 | 9 | 9 | 9 | **77** | **B** | Medium-high |
 | 5 | Qdrant MCP | 6 | 15 | 9 | 10 | 4 | 7 | 8 | **59** | **D** | Medium |
 | 6 | Amazon Neptune MCP | 9 | 12 | 10 | 10 | 4 | 6 | 7 | **58** | **D** | Medium |
 
 The best observed category scores combine to **95/100**, but they are distributed across multiple
-products. ArangoDB's 14-point gap to that composite benchmark is concentrated in identity,
+products. ArangoDB's 13-point gap to that composite benchmark is concentrated in identity,
 operations, distribution, and ecosystem maturity rather than database or agent-safety capability.
 Competitor scores are held at the August 6 assessment. Their public metrics are refreshed below,
 but their categories were not re-audited in this revision.
@@ -521,7 +549,11 @@ duration and count metrics, structured logging, telemetry, and agent evaluations
 - `[V]` The chart deploys only the MCP server; operators still provide ArangoDB, ingress/TLS,
   external secrets, network policy, and multi-cluster operations.
 
-### 7. Ecosystem and release maturity — 4/10 (D) *(was 5; September 29)*
+### 7. Ecosystem and release maturity — 5/10 (D) *(4/10 from September 29 to October 21)*
+
+**Restored on October 21:** every item listed under "Why it dropped" below is resolved and externally
+verified (see the October 21 P0 revision at the top). What still keeps this category at 5 is the lack
+of any release and the minimal adoption.
 
 **Why it dropped.** The August assessment gave 5 on configured automation, with the first
 external results still `[U]`. Those results are now `[V]`, and they are adverse:
@@ -588,7 +620,7 @@ static-token HTTP controls, traces, and one-command distribution make it the pri
 
 ### Versus Neo4j MCP
 
-ArangoDB leads 81 to 77 through much greater multi-model/administrative breadth, a compact
+ArangoDB leads 82 to 77 through much greater multi-model/administrative breadth, a compact
 readonly default, parser-backed query policy, irreversible-action confirmation, resources/prompts,
 and deterministic quality gates. Neo4j retains the simpler four-tool graph surface, mature package
 distribution, and per-request remote credentials, so it remains the principal **graph simplicity
@@ -616,7 +648,7 @@ Qdrant is the **focused semantic-memory ergonomics benchmark**.
 | Closed | MCP 2026-07-28 interoperability | DBHub documents current stateless compatibility | Strict/auto/legacy stateless contracts and live probe (`tests/test_protocol_interop.py:64-139`) | Credited |
 | Closed locally | OAuth/per-request identity and scopes | Neo4j uses per-request DB identity; Toolbox sets broader SOTA | OIDC authority intersection and request credentials implemented; independent production evidence pending (`src/arangodb_mcp/policy/tool_manager.py:434-471`) | Regrade pending |
 | Closed locally | Metrics, traces, and audit events | MongoDB exposes Prometheus; DBHub exposes request traces | Prometheus, OTLP, audit, and limit telemetry implemented and locally exercised (`scripts/run_phase4_integration.py:159-296`) | Regrade pending |
-| P0 | Green and enforce the external pipeline | Peers publish green releases from protected branches | **Oct 21:** the whole pipeline is green on `main` (CI 6/6, Security 4/4), and the six skipped Lint gates run again. **Open:** 7 CodeQL alerts untriaged; `main` unprotected (issue #6); Dependabot security alerts off; key revocation unconfirmed | +1 (restores maturity to 5) |
+| Closed | Green and enforce the external pipeline | Peers publish green releases from protected branches | **Closed Oct 21:** CI 6/6 and Security 4/4 green; 0 open CodeQL alerts (7 fixed, 5 dismissed with reasons); `main` protected by 10 required checks, enforced for admins; Dependabot security alerts on | Credited (+1; maturity 4 → 5) |
 | P1 | Release automation and provenance | MongoDB, Neo4j, DBHub publish packages/images/releases | Workflow implemented; no published artifacts or attestations (`.github/workflows/release.yml:113-347`) | +4 |
 | P1 | External verification enforcement | MongoDB has published accuracy/evaluation and security pipelines | Local gates pass; first external security/interop runs and branch protection remain open | +1 |
 | Closed | Resources/prompts and schema-first discovery | Neptune exposes resources; peers have compact discovery | Four resource capabilities and three guided prompts (`src/arangodb_mcp/mcp_content.py:22-164`) | Credited |
@@ -671,10 +703,8 @@ evidence-backed regrade.
 
 ## What would move this server to A-range
 
-The current **81/B+** result needs nine additional points for A-range. The first point comes
-from the P0 row above: restoring maturity by greening, triaging, and protecting the pipeline, with
-no new engineering. The shortest credible path
-is to preserve the 19/20 capability and 14/15 ergonomics scores while:
+The current **82/B+** result needs eight additional points for A-range. The P0 point was restored on
+October 21; the remaining path is the release, operations and adoption evidence below.
 
 - raising security from 13 to 15 with OIDC scopes, authority intersection, and request-scoped
   least-privilege credentials;
@@ -683,7 +713,7 @@ is to preserve the 19/20 capability and 14/15 ergonomics scores while:
 - raising deployment and maturity from 14 combined to at least 16 through published signed
   artifacts, Helm, governance, and independently observable use.
 
-Phase 4/5 implementation may support a future **90–92/A** result, but the score remains **81/B+**
+Phase 4/5 implementation may support a future **90–92/A** result, but the score remains **82/B+**
 until external interoperability, security, release, operational, governance, and use evidence
 passes and an independent MAT-003 regrade occurs after at least 30 days.
 
