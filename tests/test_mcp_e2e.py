@@ -58,9 +58,9 @@ class TestToolRegistration:
 
     def test_all_83_tools_registered(self):
         tools = _get_tools()
-        assert (
-            len(tools) == 83
-        ), f"Expected 83 tools, found {len(tools)}. Tool names: {sorted(t.name for t in tools)}"
+        assert len(tools) == 83, (
+            f"Expected 83 tools, found {len(tools)}. Tool names: {sorted(t.name for t in tools)}"
+        )
 
     def test_tool_names_are_kebab_case(self):
         violations = [t.name for t in _get_tools() if not _KEBAB_RE.match(t.name)]
@@ -69,9 +69,9 @@ class TestToolRegistration:
     @pytest.mark.parametrize("tool_name", CRITICAL_TOOLS)
     def test_critical_tools_exist(self, tool_name):
         names = {t.name for t in _get_tools()}
-        assert (
-            tool_name in names
-        ), f"Critical tool '{tool_name}' missing. Registered: {sorted(names)}"
+        assert tool_name in names, (
+            f"Critical tool '{tool_name}' missing. Registered: {sorted(names)}"
+        )
 
 
 # ===========================================================================
@@ -85,9 +85,9 @@ class TestToolSchemaValidation:
     def test_execute_aql_query_has_required_params(self):
         tool = _get_tool("execute-aql-query")
         required = tool.parameters.get("required", [])
-        assert (
-            "aql_query" in required
-        ), f"'aql_query' should be required; required list is {required}"
+        assert "aql_query" in required, (
+            f"'aql_query' should be required; required list is {required}"
+        )
         props = tool.parameters.get("properties", {})
         assert "aql_query" in props, "'aql_query' not in parameter properties"
 
@@ -95,9 +95,9 @@ class TestToolSchemaValidation:
         tool = _get_tool("create-document")
         required = tool.parameters.get("required", [])
         props = tool.parameters.get("properties", {})
-        assert (
-            "collection_name" in required
-        ), f"'collection_name' should be required; got {required}"
+        assert "collection_name" in required, (
+            f"'collection_name' should be required; got {required}"
+        )
         assert "document_data" in required, f"'document_data' should be required; got {required}"
         assert "collection_name" in props
         assert "document_data" in props
@@ -128,9 +128,9 @@ class TestToolSchemaValidation:
             if "database_name" in required:
                 violations.append(t.name)
 
-        assert (
-            violations == []
-        ), f"database_name should be optional but is required on: {violations}"
+        assert violations == [], (
+            f"database_name should be optional but is required on: {violations}"
+        )
 
 
 # ===========================================================================

@@ -127,7 +127,7 @@ class TestGenerateEmbeddingsGuards:
                 return httpx.Response(200, json={"data": []})
 
         async def exercise():
-            incoming = "00-0123456789abcdef0123456789abcdef-" "0123456789abcdef-01"
+            incoming = "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01"
             with (
                 correlation_scope(
                     request_id="embedding-request",

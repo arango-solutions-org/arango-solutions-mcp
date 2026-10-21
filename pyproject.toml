@@ -79,6 +79,7 @@ ignore = [
     "E501",   # line-too-long — enforced by formatter, not linter
     "UP006",  # non-pep585-annotation — project uses typing.Dict/List
     "UP007",  # non-pep604-annotation — project uses Optional[X] (also covers parameters)
+    "UP045",  # non-pep604-annotation-optional — split out of UP007 in ruff 0.12; same policy
     "UP035",  # deprecated-import — project uses typing imports
     "W293",   # whitespace-before-comment — in multiline Field descriptions
 ]
