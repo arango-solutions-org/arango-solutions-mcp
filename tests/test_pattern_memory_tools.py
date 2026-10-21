@@ -299,6 +299,95 @@ class TestSaveDriftAlert:
         assert out["result"]["status"] == "open"
         assert "_ensure_provenance" in spy.dispatched
 
+    def _capture_upsert(self, monkeypatch, **kwargs):
+        """Run save_drift_alert and return the (full, upd) bind vars it wrote."""
+        db = MagicMock()
+        db.has_collection.return_value = True
+        db.aql.execute.return_value = []
+        captured = {}
+
+        async def _spy(fn, *args, **kw):
+            if fn is db.aql.execute:
+                captured.update(kw.get("bind_vars") or {})
+            return fn(*args, **kw)
+
+        monkeypatch.setattr(pm, "run_sync", _spy)
+        with patch.object(pm.arango_connector, "get_db", return_value=db):
+            asyncio.run(pm.save_drift_alert(**kwargs))
+        return captured
+
+    def test_branch_and_commit_are_persisted(self, monkeypatch):
+        """The regression this tool shipped for 3 weeks: /prd-sync sent branch and
+        commit on every write and save_drift_alert had no parameters for them, so
+        drift_alerts carried 0/16 branch stamps while prd_patches and
+        sync_observations -- written through generic upsert-document, which passes
+        arbitrary fields -- carried 5/5 each."""
+        binds = self._capture_upsert(
+            monkeypatch,
+            project_id="proj",
+            req_id="REQ-007",
+            requirement="r",
+            classification="PARTIAL",
+            status="open",
+            branch="feat/thing",
+            commit="abc1234",
+            collection_name="drift_alerts",
+            database_name="",
+        )
+        assert binds["full"]["branch"] == "feat/thing"
+        assert binds["full"]["commit"] == "abc1234"
+        # and they must MERGE on re-detection, answering "still true on which branch"
+        assert binds["upd"]["branch"] == "feat/thing"
+        assert binds["upd"]["commit"] == "abc1234"
+
+    def test_close_stamps_closed_branch_and_commit(self, monkeypatch):
+        """A close on a feature branch is provisional until the commit reaches the
+        default branch. Without closed_branch the two cases are indistinguishable."""
+        binds = self._capture_upsert(
+            monkeypatch,
+            project_id="proj",
+            req_id="REQ-007",
+            status="closed",
+            closed_evidence="f.py:12",
+            branch="feat/thing",
+            commit="abc1234",
+            collection_name="drift_alerts",
+            database_name="",
+        )
+        assert binds["full"]["closed_branch"] == "feat/thing"
+        assert binds["full"]["closed_commit"] == "abc1234"
+
+    def test_absent_branch_never_blanks_a_recorded_one(self, monkeypatch):
+        """Empty strings are dropped from the merge subset, so a re-sync by an older
+        skill version that never learned to send branch leaves an existing stamp
+        intact rather than erasing it.
+
+        Passing "" is how that arrives in practice: the MCP layer resolves the
+        pydantic default before the function runs, so an omitted field and an
+        explicit empty string are the same call. (Calling the raw function with the
+        argument left out instead hands the body a FieldInfo object -- a test
+        artifact, which is why every test in this file passes arguments in full.)
+        """
+        binds = self._capture_upsert(
+            monkeypatch,
+            project_id="proj",
+            req_id="REQ-007",
+            requirement="r",
+            classification="PARTIAL",
+            status="open",
+            evidence="",
+            gap_description="g",
+            detected_at="",
+            closed_at="",
+            closed_evidence="",
+            branch="",
+            commit="",
+            collection_name="drift_alerts",
+            database_name="",
+        )
+        assert "branch" not in binds["upd"]
+        assert "commit" not in binds["upd"]
+
 
 # ---------------------------------------------------------------------------
 # save-pattern (embedding supplied, no vector index -> no graph edges)
