@@ -49,6 +49,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Migrated to MCP Python SDK 2.x (`mcp ^2.3.0`). The server is an `MCPServer`; HTTP transport
+  settings (path, JSON responses, stateless mode, body limit, Host/Origin security) are applied by
+  the ASGI app factory; `serverInfo.version` is advertised explicitly. Protocol 2026-07-28 is
+  supported natively, including its stateless core (no `initialize`; clients use
+  `server/discover`), so the 1.x negotiation bridge is gone.
+- **Client-visible:** `tools/list` results now carry `cacheScope: "private"` (was `"public"`).
+  Under OIDC each caller's tool list is filtered by its token scopes, so it must not be shared
+  across authorization contexts. Cache TTLs are unchanged.
 - Catalog metadata and AQL manuals are distributed as package data and loaded through
   `importlib.resources`.
 - The container runtime installs the built wheel into a read-only, non-root virtual environment

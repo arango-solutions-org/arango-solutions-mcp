@@ -330,9 +330,11 @@ Streamable HTTP is stateless. `MCP_PROTOCOL_MODE=strict` requires the 2026-07-28
 body. The default `auto` mode enforces the complete v3 contract when any routing header is
 present but temporarily accepts headerless legacy clients. `MCP_ALLOWED_HOSTS` and
 `MCP_ALLOWED_ORIGINS` must include public deployment names; Host and Origin validation occurs
-before bearer authentication. The official Python SDK currently advertises 2025-11-25, so
-`protocol_compat.py` provides a tested negotiation bridge with a hard 2027-02-01 sunset; it is
-removed automatically from the design once upstream natively advertises 2026-07-28.
+before bearer authentication. The official MCP Python SDK 2.x supports 2026-07-28 natively,
+including its stateless core: there is no `initialize` handshake, and clients use `server/discover`.
+`protocol_compat.py` only verifies that native support at startup. Results carry explicit cache
+hints; `tools/list` is `private` because under OIDC each caller's tool list is filtered by its
+token scopes.
 
 > **Limitation:** the auth middleware wraps the official MCP SDK's ASGI app factories
 > (`streamable_http_app()` / `sse_app()`). If a future SDK release removes those factories, the
@@ -642,7 +644,7 @@ arango-solutions-mcp/
 ├── src/arangodb_mcp/        # Installable application package
 │   ├── cli.py               # Configuration-free console/version entry point
 │   ├── main.py              # Server bootstrap and event loop setup
-│   ├── server.py            # FastMCP app and registration boundary
+│   ├── server.py            # MCPServer app and registration boundary
 │   ├── mcp_content.py       # MCP resources and safe workflow prompts
 │   ├── config.py            # Pydantic settings (env-based, zero hardcoding)
 │   ├── arango_connector.py  # Connection pool, SSL, lifespan management
@@ -725,7 +727,7 @@ arango-solutions-mcp/
 │   ├── metrics.py
 │   └── telemetry.py
 │
-├── tests/                   # Pytest suite (438 test functions)
+├── tests/                   # Pytest suite (439 test functions)
 │   ├── conftest.py          # Auto-provisions Docker containers
 │   ├── test_app_factory.py
 │   ├── test_connectivity.py
@@ -764,7 +766,7 @@ arango-solutions-mcp/
 
 The codebase follows a two-layer pattern:
 
-- **MCP Tools** (`src/arangodb_mcp/mcp_tools/`) — thin FastMCP-decorated functions that validate inputs and delegate to agents.
+- **MCP Tools** (`src/arangodb_mcp/mcp_tools/`) — thin `@mcp_app.tool`-decorated functions that validate inputs and delegate to agents.
 - **Agents** (`src/arangodb_mcp/agents/`) — business logic classes inheriting from `ArangoAgentBase` that interact with ArangoDB via `python-arango`.
 
 ---
@@ -895,7 +897,7 @@ pre-commit install
 - **Hybrid search** — combine vector similarity with BM25 text relevance
 - **AQL-first** — built-in manuals, explain plans, and syntax validation
 - **Security by default** — AQL injection prevention, JS transaction gating, SSL verification, log redaction
-- **Self-testing** — 438 test functions across unit, framework, integration, and cluster tiers
+- **Self-testing** — 439 test functions across unit, framework, integration, and cluster tiers
 - **Cross-platform** — runs on macOS, Linux, Windows (via Docker)
 
 ## License
