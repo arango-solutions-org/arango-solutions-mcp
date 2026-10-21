@@ -213,7 +213,7 @@ def test_phase4_and_phase5_ci_harnesses_make_deployment_contracts_mechanical():
         '"$HELM" install',
         '"$HELM" upgrade',
         "curl --fail --show-error",
-        '"initialize",',
+        '"server/discover"',
         '"tools/call"',
         "list-databases",
         '"$KIND" delete cluster',

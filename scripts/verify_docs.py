@@ -225,7 +225,7 @@ def verify() -> list[str]:
         '"$KIND" load docker-image',
         '"$HELM" install',
         '"$HELM" upgrade',
-        "Authenticated MCP initialize and list-databases call passed.",
+        "Authenticated MCP server/discover and list-databases call passed.",
         "delete cluster",
     ):
         _require(errors, helm_runner, marker, "kind Helm acceptance harness")

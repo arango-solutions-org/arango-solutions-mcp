@@ -133,24 +133,17 @@ def request(method, params, request_id, authenticated=True, name=None):
 status, _ = request("tools/list", {}, 0, authenticated=False)
 assert status == 401, status
 
-status, initialized = request(
-    "initialize",
-    {
-        "protocolVersion": protocol,
-        "capabilities": {},
-        "clientInfo": {"name": "phase5-kind-smoke", "version": "1.0"},
-    },
-    1,
-)
-assert status == 200, initialized
-assert initialized["result"]["protocolVersion"] == protocol, initialized
+# 2026-07-28 is the stateless core: no initialize handshake; discover instead.
+status, discovered = request("server/discover", {}, 1)
+assert status == 200, discovered
+assert protocol in discovered["result"]["supportedVersions"], discovered
 
 status, called = request(
     "tools/call", {"name": "list-databases", "arguments": {}}, 2, name="list-databases"
 )
 assert status == 200, called
 assert "result" in called, called
-print("Authenticated MCP initialize and list-databases call passed.")
+print("Authenticated MCP server/discover and list-databases call passed.")
 PY
 
 "$HELM" upgrade "$RELEASE" "$CHART" \
