@@ -390,7 +390,7 @@ implementation.
 | DOC-002 | CURRENT | Quality | Test-count and test-tier claims MUST be generated or mechanically verified against the repository. | TEST: `scripts/verify_docs.py:36-45`, `tests/test_doc_consistency.py:21-37` |
 | DOC-003 | CURRENT | Product | The PRD MUST use requirement-level states rather than a blanket implementation claim. | STATIC: `PRD.md:38-55`, `PRD.md:377-464` |
 | DOC-004 | CURRENT | Architecture | Tool-layer business-logic exceptions MUST be explicit and retain async/error/test parity. | STATIC: `src/arangodb_mcp/mcp_tools/_support.py:33-59`; TEST: `tests/test_embedding_tools.py:44-60`, `tests/test_pattern_memory_tools.py:88-112` |
-| DOC-005 | CURRENT | Release | Release-history entries MUST reference immutable commits or releases and MUST NOT say “uncommitted.” | STATIC: `PRD.md:764-783`; TEST: `scripts/verify_docs.py:247-248` |
+| DOC-005 | CURRENT | Release | Release-history entries MUST reference immutable commits or releases and MUST NOT say “uncommitted.” | STATIC: `PRD.md:766-785`; TEST: `scripts/verify_docs.py:247-248` |
 | DOC-006 | CURRENT | Platform | The documented Compose quick start MUST require secret injection and start successfully without disabling the non-loopback auth guard. | STATIC: `docker-compose.yml:2-66`, `README.md:363-385`; TEST: `tests/test_deployment_contract.py:15-57`; LIVE: clean Compose smoke reached healthy MCP |
 | DOC-007 | CURRENT | Platform | Vector capability claims MUST match the default Compose configuration or clearly document degraded mode. | STATIC: `docker-compose.yml:68-85`; TEST: `tests/test_deployment_contract.py:15-28`; LIVE: Compose vector-index probe passed |
 | DOC-008 | CURRENT | Architecture | Every tool MUST return one versioned success/error envelope, with a time-bounded legacy adapter. | STATIC: `src/arangodb_mcp/contracts/v3_result.py:8-98`, `src/arangodb_mcp/policy/tool_manager.py:259-266`, `src/arangodb_mcp/policy/tool_manager.py:365-372`; TEST: `tests/test_v3_contract.py:25-107` covers every registered tool, error normalization, schema preservation, and adapter expiry; LIVE: 2026-08-06 authenticated Compose call returned root `contractVersion: "3.0"` and `status: "success"` |
@@ -723,15 +723,16 @@ The suite is organized into three tiers based on what infrastructure they need:
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `python` | ^3.10 | Language runtime |
-| `python-arango` | ^8.1 | ArangoDB Python driver |
+| `python-arango` | ^8.3.6 | ArangoDB Python driver |
 | `mcp` | ^2.3 | Model Context Protocol SDK (2.x `MCPServer`) |
-| `pydantic` | ^2.0 | Data validation and serialization |
-| `pydantic-settings` | ^2.0 | Environment-based configuration |
-| `anyio` | ^4.5 | Async I/O compatibility |
+| `pydantic` | ^2.14 | Data validation and serialization |
+| `pydantic-settings` | ^2.15 | Environment-based configuration |
+| `anyio` | ^4.15 | Async I/O compatibility |
+| `starlette`, `uvicorn` | >=1.7, >=0.54 | ASGI application and HTTP server for the HTTP transports |
 | `httpx` | ^0.28 | OIDC/JWKS and embedding HTTP client |
 | `pyjwt[crypto]` | ^2.15.1 | Asymmetric OIDC access-token verification |
 | `prometheus-client` | ^0.26 | Bounded-cardinality metrics and ASGI exposition |
-| `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` | ^1.44 | Trace API, SDK, and OTLP/HTTP export |
+| `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` | ^1.45.1 | Trace API, SDK, and OTLP/HTTP export |
 | `pyyaml` | ^6.0 | Canonical tool-catalog loading |
 
 ### 7.2 Development
@@ -741,12 +742,13 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `pytest` | ^9.1 | Test framework |
 | `pytest-asyncio` | ^1.4 | Async test support |
 | `pytest-timeout` | ^2.2 | Test timeout enforcement |
-| `black` | ^26.5 | Legacy compatibility formatter; CI uses Ruff |
+| `black` | ^26.10 | Legacy compatibility formatter; CI uses Ruff |
 | `isort` | ^5.13 | Legacy compatibility import sorter; CI uses Ruff |
 | `mypy` | ^1.0 | Static type checker |
-| `ruff` | ^0.8 | Fast linter and formatter |
+| `ruff` | ^0.17 | Fast linter and formatter |
 | `pytest-cov` | ^7.1 | Test coverage reporting and 79% floor enforcement |
 | `pip-audit` | ^2.10 | Dependency vulnerability audit |
+| `types-pyyaml` | ^6.0.12 | Type stubs for mypy |
 
 ### 7.3 Packaging and distribution
 
