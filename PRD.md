@@ -743,7 +743,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `pytest-asyncio` | ^1.4 | Async test support |
 | `pytest-timeout` | ^2.2 | Test timeout enforcement |
 | `black` | ^26.10 | Legacy compatibility formatter; CI uses Ruff |
-| `isort` | ^5.13 | Legacy compatibility import sorter; CI uses Ruff |
+| `isort` | ^9.0 | Legacy compatibility import sorter; CI uses Ruff |
 | `mypy` | ^1.0 | Static type checker |
 | `ruff` | ^0.17 | Fast linter and formatter |
 | `pytest-cov` | ^7.1 | Test coverage reporting and 79% floor enforcement |
