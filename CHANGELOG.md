@@ -81,6 +81,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Upgrade OpenTelemetry to 1.45.1 for CVE-2026-114603 in `opentelemetry-api` 1.44.0; the declared
+  floors for `opentelemetry-api`, `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`
+  are now `^1.45.1`.
 - Confirmation tokens bind their parameters with an HMAC-SHA256 keyed by the confirmation secret
   instead of a plain SHA-256. The digest is readable inside a token, and arguments can carry
   low-entropy values such as a `create-user` password. The token format moves to version 2, so
