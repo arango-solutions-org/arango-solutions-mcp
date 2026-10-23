@@ -744,7 +744,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `pytest-timeout` | ^2.2 | Test timeout enforcement |
 | `black` | ^26.10 | Legacy compatibility formatter; CI uses Ruff |
 | `isort` | ^9.0 | Legacy compatibility import sorter; CI uses Ruff |
-| `mypy` | ^1.0 | Static type checker |
+| `mypy` | ^2.4 | Static type checker |
 | `ruff` | ^0.17 | Fast linter and formatter |
 | `pytest-cov` | ^7.1 | Test coverage reporting and 79% floor enforcement |
 | `pip-audit` | ^2.10 | Dependency vulnerability audit |
