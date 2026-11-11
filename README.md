@@ -11,7 +11,7 @@ Built for AI assistants (Cursor, Claude Desktop, etc.) that need full-spectrum a
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - [Poetry](https://python-poetry.org/docs/#installation) for dependency management
 - ArangoDB instance (local, Docker, or remote)
 

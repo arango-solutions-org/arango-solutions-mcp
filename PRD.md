@@ -341,7 +341,7 @@ Cross-project "dark factory" memory (see `CLAUDE.md`): reusable solution pattern
 | Requirement | Implementation |
 |-------------|----------------|
 | **ArangoDB versions** | 3.12+ (vector search requires 3.12.4+ with `--experimental-vector-index`); forward-compatible with 4.0 |
-| **Python versions** | 3.10+ (uses `pyproject.toml` with `python = "^3.10"`) |
+| **Python versions** | 3.11+ (uses `pyproject.toml` with `python = "^3.11"`); Python 3.10 support ended when it reached upstream end of life |
 | **Platforms** | macOS, Linux, Windows — platform-specific event loop policies configured in `src/arangodb_mcp/main.py` |
 | **MCP clients** | Any MCP-compatible client (Cursor IDE, Claude Desktop, Antigravity, custom integrations) |
 | **Transport** | stdio (default for client-launched), SSE, and streamable-http (for standalone/Docker deployment) |
@@ -446,10 +446,10 @@ implementation.
 
 | ID | State | Owner | Requirement and acceptance gate | Required evidence |
 |----|-------|-------|---------------------------------|-------------------|
-| REL-001 | CURRENT | Quality | Required CI MUST be green and enforce a measured non-regression coverage floor. | STATIC: `.github/workflows/ci.yml:115-119` (`--cov-fail-under=79`), `pyproject.toml:99`; TEST: Ruff, Mypy, and 489 tests pass, with 82% measured coverage on Python 3.10, 3.11 and 3.14; EXTERNAL: `main` branch protection (read back from the API on 2026-10-21) requires 10 CI and Security checks, up-to-date branches and pull requests, enforced for admins, with force-push and deletion disallowed ([issue #6](https://github.com/arango-solutions-org/arango-solutions-mcp/issues/6), closed); CI 6/6 green on `main` |
+| REL-001 | CURRENT | Quality | Required CI MUST be green and enforce a measured non-regression coverage floor. | STATIC: `.github/workflows/ci.yml:115-119` (`--cov-fail-under=79`), `pyproject.toml:99`; TEST: Ruff, Mypy, and 489 tests pass, with 82% measured coverage on the CI Python matrix (then 3.10, 3.11 and 3.14; 3.11 and 3.14 since Python 3.10 support ended); EXTERNAL: `main` branch protection (read back from the API on 2026-10-21) required 10 CI and Security checks, up-to-date branches and pull requests, enforced for admins, with force-push and deletion disallowed ([issue #6](https://github.com/arango-solutions-org/arango-solutions-mcp/issues/6), closed); the Python 3.10 test check left that list when Python 3.10 support ended, leaving 9; CI 5/5 green on `main` (6/6 while the 3.10 job existed) |
 | REL-002 | CURRENT | Security | CI MUST run dependency audit, CodeQL, secret scanning, and container/dependency vulnerability checks with a documented severity policy. | STATIC: `.github/workflows/security.yml:16` (secret scan), `:35` (container scan), `:59` (CodeQL), `:77` (dependency audit), `SECURITY.md:32-35` (severity policy), `.github/dependabot.yml`; TEST: `tests/test_security_contract.py`; EXTERNAL: Security 4/4 green on `main`, all four required by branch protection; 0 open CodeQL alerts (7 fixed, 5 dismissed with recorded reasons); Dependabot security alerts and security updates enabled, 0 open (2026-10-21) |
 | REL-003 | CURRENT | Quality | A scheduled job MUST execute real multi-server cluster tests rather than deselecting them. | STATIC: `.github/workflows/cluster-nightly.yml:1-113`; TEST: `tests/test_cluster.py:1-225`, `tests/test_deployment_contract.py:75-83`; LIVE + EXTERNAL: [Nightly Cluster run 31068063574](https://github.com/arango-solutions-org/arango-solutions-mcp/actions/runs/31068063574) completed successfully on 2026-08-05 against the pinned three-machine deployment |
-| REL-004 | PARTIAL | Protocol | CI MUST verify supported MCP transports and strict/legacy interoperability with pinned reference clients. | TEST: `tests/test_protocol_interop.py:70-152` covers strict/auto/legacy Streamable HTTP and `tests/test_app_factory.py:59-75` covers SSE/stdio composition; CI: the matrix runs on Python 3.10, 3.11 and 3.14 as required checks; GAP: no pinned reference MCP client (tests send hand-built JSON-RPC through Starlette's TestClient; stdio/SSE are covered as app composition only) |
+| REL-004 | PARTIAL | Protocol | CI MUST verify supported MCP transports and strict/legacy interoperability with pinned reference clients. | TEST: `tests/test_protocol_interop.py:70-152` covers strict/auto/legacy Streamable HTTP and `tests/test_app_factory.py:59-75` covers SSE/stdio composition; CI: the matrix runs on Python 3.11 and 3.14 as required checks; GAP: no pinned reference MCP client (tests send hand-built JSON-RPC through Starlette's TestClient; stdio/SSE are covered as app composition only) |
 | REL-005 | CURRENT | Quality | Deterministic task replays MUST gate tool selection and destructive refusal; live-model evaluations MAY run as advisory nightly checks. | STATIC: `evals/data/tool_selection.v1.json`, `evals/data/destructive_refusal.v1.json`, `evals/run_quality_gates.py:40-92`, `.github/workflows/ci.yml:43-50`; TEST + LIVE: deterministic gate produced selection 90% and destructive refusal 100% on 2026-08-06 |
 | REL-006 | CURRENT | Quality | Retrieval quality and performance MUST have versioned in-repository baselines and blocking regression thresholds. | STATIC: `evals/data/retrieval_golden.v1.json`, `evals/baselines/quality.v1.json`, `evals/run_quality_gates.py:95-170`; TEST: `tests/test_quality_gates.py:15-43`; LIVE: v1 gate produced MRR@10 1.0, recall@5 1.0, p50 0.097ms, p95 0.323ms, p99 0.390ms on 2026-08-06 |
 
@@ -704,7 +704,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | **Platform** | GitHub Actions (`ci.yml`) |
 | **Triggers** | Push/PR to `main` |
 | **Lint job** | Ruff check + Ruff format check + documentation consistency + deterministic quality gates + Mypy type check |
-| **Test job** | pytest with coverage across Python 3.10 and 3.11, ArangoDB 3.12 Docker |
+| **Test job** | pytest with coverage across Python 3.11 and 3.14, ArangoDB 3.12 Docker |
 | **Security jobs** | CodeQL and dependency audit on push/PR, weekly schedule, and manual dispatch |
 | **Cluster job** | Pinned three-machine ArangoDB Starter deployment and real cluster tests nightly/manual |
 | **Phase 4 integration** | Containerized ephemeral-key reference IdP, Prometheus, and OTLP collector verify discovery/JWKS, signed JWT MCP access, metrics scraping, and trace export on every push/PR |
@@ -722,7 +722,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `python` | ^3.10 | Language runtime |
+| `python` | ^3.11 | Language runtime |
 | `python-arango` | ^8.3.6 | ArangoDB Python driver |
 | `mcp` | ^2.3 | Model Context Protocol SDK (2.x `MCPServer`) |
 | `pydantic` | ^2.14 | Data validation and serialization |
