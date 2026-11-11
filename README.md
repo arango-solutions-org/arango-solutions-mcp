@@ -137,7 +137,7 @@ For remote/Docker deployments, Antigravity can connect via HTTP:
 | `MCP_OIDC_CACHE_TTL_SECONDS` | No | `300` | Fallback discovery/JWKS cache lifetime; HTTP `max-age` is honored up to one hour |
 | `MCP_OIDC_ALLOW_INSECURE_HTTP` | No | `false` | Test/development-only HTTP escape hatch limited to loopback, private IPs, single-label container DNS, and `.test`/`.local`; production remains HTTPS-only |
 | `MCP_ARANGO_CREDENTIALS_JSON` | With OIDC | — | Secret server-side actor credential mapping; tokens cannot supply usernames or passwords |
-| `MCP_PROTOCOL_MODE` | No | `auto` | `strict` requires MCP 2026-07-28 request metadata, `auto` accepts complete v3 metadata or headerless legacy requests, and `legacy` disables metadata validation |
+| `MCP_PROTOCOL_MODE` | No | `auto` | `strict` requires MCP 2026-07-28 request metadata, `auto` accepts legacy requests (no 2026 routing headers, and no version header or a pre-2026 version the SDK supports) and enforces complete v3 metadata on all others, and `legacy` disables metadata validation |
 | `MCP_DNS_REBINDING_PROTECTION` | No | `true` | Validate the MCP `Host` and browser `Origin` headers |
 | `MCP_ALLOWED_HOSTS` | No | local loopback hosts | Comma-separated Host allowlist; `:*` permits any port |
 | `MCP_ALLOWED_ORIGINS` | No | local HTTP loopback origins | Comma-separated browser Origin allowlist; `:*` permits any port |
@@ -327,8 +327,11 @@ and log a warning.
 
 Streamable HTTP is stateless. `MCP_PROTOCOL_MODE=strict` requires the 2026-07-28
 `MCP-Protocol-Version`, `Mcp-Method`, and applicable `Mcp-Name` headers to match the JSON-RPC
-body. The default `auto` mode enforces the complete v3 contract when any routing header is
-present but temporarily accepts headerless legacy clients. `MCP_ALLOWED_HOSTS` and
+body. The default `auto` mode temporarily accepts legacy clients: requests with no
+`Mcp-Method` or `Mcp-Name` header and either no `MCP-Protocol-Version` or one naming a
+pre-2026 version the SDK supports, as 2025 clients must send. Every other request, including
+one naming 2026-07-28 or an unknown version, gets the complete v3 contract.
+`MCP_ALLOWED_HOSTS` and
 `MCP_ALLOWED_ORIGINS` must include public deployment names; Host and Origin validation occurs
 before bearer authentication. The official MCP Python SDK 2.x supports 2026-07-28 natively,
 including its stateless core: there is no `initialize` handshake, and clients use `server/discover`.
@@ -727,7 +730,7 @@ arango-solutions-mcp/
 │   ├── metrics.py
 │   └── telemetry.py
 │
-├── tests/                   # Pytest suite (445 test functions)
+├── tests/                   # Pytest suite (452 test functions)
 │   ├── conftest.py          # Auto-provisions Docker containers
 │   ├── test_app_factory.py
 │   ├── test_connectivity.py
@@ -897,7 +900,7 @@ pre-commit install
 - **Hybrid search** — combine vector similarity with BM25 text relevance
 - **AQL-first** — built-in manuals, explain plans, and syntax validation
 - **Security by default** — AQL injection prevention, JS transaction gating, SSL verification, log redaction
-- **Self-testing** — 445 test functions across unit, framework, integration, and cluster tiers
+- **Self-testing** — 452 test functions across unit, framework, integration, and cluster tiers
 - **Cross-platform** — runs on macOS, Linux, Windows (via Docker)
 
 ## License

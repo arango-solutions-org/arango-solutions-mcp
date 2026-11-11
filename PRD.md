@@ -551,7 +551,7 @@ implementation.
 | `MCP_HOST` | No | `0.0.0.0` | — | Bind host for `sse`/`streamable-http` transport |
 | `MCP_PORT` | No | `8000` | — | Bind port for `sse`/`streamable-http` transport |
 | `MCP_AUTH_TOKEN` | Conditional | — | — | Bearer token required for `sse` / `streamable-http` transports. **REQUIRED** when `MCP_HOST` is non-loopback (anything other than `127.0.0.1`, `localhost`, or `::1`); the server exits with code `2` if unset in that configuration. Ignored for `stdio`. Stored in-process as `pydantic.SecretStr`. |
-| `MCP_PROTOCOL_MODE` | No | `auto` | — | `strict` requires MCP 2026-07-28 request metadata, `auto` accepts complete v3 metadata or headerless legacy requests, and `legacy` disables metadata validation. |
+| `MCP_PROTOCOL_MODE` | No | `auto` | — | `strict` requires MCP 2026-07-28 request metadata, `auto` accepts legacy requests (no 2026 routing headers, and no version header or a pre-2026 version the SDK supports) and enforces complete v3 metadata on all others, and `legacy` disables metadata validation. |
 | `MCP_DNS_REBINDING_PROTECTION` | No | `true` | — | Validate Host and Origin before MCP authentication or dispatch. |
 | `MCP_ALLOWED_HOSTS` | No | local loopback hosts | — | Comma-separated Host allowlist; entries may use a `:*` port wildcard. |
 | `MCP_ALLOWED_ORIGINS` | No | local HTTP loopback origins | — | Comma-separated browser Origin allowlist; entries may use a `:*` port wildcard. |
@@ -684,7 +684,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `test_mcp_tools.py` | Mock | Verifies each `@mcp_app.tool` wrapper builds the correct operation dict and delegates to its agent's `arun` |
 | `test_embedding_tools.py` | Mock | `embed-text` / `embed-document` plus shared helpers — standardized errors, off-loop dispatch, TLS-env sanitisation, API-key guard, trace/header propagation, and dependency spans |
 | `test_pattern_memory_tools.py` | Mock | The five shared-memory tools — BM25 fallback path, provenance upsert, usage bump + missing-key reporting, standardized errors, off-loop dispatch |
-| `test_protocol_interop.py` | E2E (framework) | Pinned 2026-07-28 stateless discover/list/call flow plus headerless 2025 compatibility |
+| `test_protocol_interop.py` | E2E (framework) | Pinned 2026-07-28 stateless discover/list/call flow plus 2025 compatibility, with and without the 2025 `MCP-Protocol-Version` header |
 | `test_protocol_metadata.py` | ASGI contract | MCP 2026-07-28 routing-header matching, Base64 sentinel decoding, unsupported-version errors, and legacy compatibility |
 | `test_protocol_security.py` | ASGI contract | Official SDK Host and Origin allowlist behavior |
 | `test_mcp_content.py` | MCP contract | Exact resources/templates/prompts inventory plus manual, schema, profile, status, and safe-workflow round trips |
