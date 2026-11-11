@@ -160,3 +160,47 @@ def test_explicit_legacy_mode_ignores_partial_routing_headers():
 
     assert response.status_code == 200
     assert response.json()["result"]["protocolVersion"] == "2025-11-25"
+
+
+def test_auto_mode_serves_a_2025_client_that_sends_the_required_version_header():
+    # Regression: a spec-compliant 2025-11-25 client sends MCP-Protocol-Version on every
+    # request after initialize. Auto mode used to treat that header as a 2026 routing
+    # signal and reject tools/list and tools/call with -32022.
+    base = {"host": "localhost:8000", "accept": "application/json, text/event-stream"}
+    with TestClient(_probe_app("auto")) as client:
+        handshake = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {},
+                    "clientInfo": {"name": "spec-2025-client", "version": "1.0"},
+                },
+            },
+            headers=base,
+        )
+        versioned = {**base, "mcp-protocol-version": "2025-11-25"}
+        listed = client.post(
+            "/mcp",
+            json={"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
+            headers=versioned,
+        )
+        called = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {"name": "echo", "arguments": {"value": "ok"}},
+            },
+            headers=versioned,
+        )
+
+    assert handshake.json()["result"]["protocolVersion"] == "2025-11-25"
+    assert listed.status_code == 200
+    assert [tool["name"] for tool in listed.json()["result"]["tools"]] == ["echo"]
+    assert called.status_code == 200
+    assert called.json()["result"]["isError"] is False

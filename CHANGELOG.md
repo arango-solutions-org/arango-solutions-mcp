@@ -78,6 +78,13 @@ All notable changes to this project are documented here. The format follows
 - The release workflow's wheel re-verification asserted a stale tool count (81 instead of 83),
   which would have failed the first tagged release. `scripts/verify_docs.py` now derives the
   expected count for every hardcoded copy, including `release.yml` and `verify_wheel.py`.
+- In the default `MCP_PROTOCOL_MODE=auto`, HTTP clients on MCP 2025-06-18 or later were
+  rejected with `-32022 Unsupported protocol version` on every request after `initialize`.
+  Those clients must send `MCP-Protocol-Version`, and `auto` treated that header alone as a
+  2026-07-28 routing signal. `auto` now passes a request to the MCP SDK when it carries no
+  `Mcp-Method` or `Mcp-Name` and its version header names a pre-2026 version the SDK
+  supports; every other request still gets the strict 2026 contract, so unknown or empty
+  versions keep their `-32022`/`-32020` rejection. `strict` and `legacy` are unchanged.
 
 ### Security
 
