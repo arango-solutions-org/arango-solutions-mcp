@@ -17,7 +17,7 @@ Suspected vulnerabilities must not be filed publicly. Follow
 ## Development workflow
 
 1. Fork the repository and branch from `main`.
-2. Install Python 3.10+ and Poetry 2.1.3.
+2. Install Python 3.11+ and Poetry 2.1.3.
 3. Run `poetry install --with dev`.
 4. Make a focused change with tests and documentation.
 5. Run the relevant local gates before opening a pull request:

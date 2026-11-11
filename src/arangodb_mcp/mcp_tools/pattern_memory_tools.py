@@ -226,7 +226,7 @@ def _maintain_graph(
             },
             overwrite=True,
         )
-        now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        now_iso = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         _invalidate(
             coll,
             old_k,
@@ -383,9 +383,7 @@ def _log_search(db, query_text, mode, results, project_id, collection_name):
                 "top_relevance": top.get("relevance") if top else None,
                 "hit": bool(top and (top.get("relevance") or 0) >= _HIT_RELEVANCE),
                 "result_keys": [r["_key"] for r in results],
-                "created_at": datetime.datetime.now(datetime.timezone.utc).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                ),
+                "created_at": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
         )
         keys = [r["_key"] for r in results]
@@ -397,9 +395,7 @@ def _log_search(db, query_text, mode, results, project_id, collection_name):
                 bind_vars={
                     "keys": keys,
                     "@coll": collection_name,
-                    "now": datetime.datetime.now(datetime.timezone.utc).strftime(
-                        "%Y-%m-%dT%H:%M:%SZ"
-                    ),
+                    "now": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 },
             )
     except Exception:  # noqa: BLE001 — instrumentation must never break search
@@ -731,7 +727,7 @@ async def save_pattern(
             }
         db = await run_sync(arango_connector.get_db, database_name or None)
         coll = db.collection(collection_name)
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         created = created_at or now.strftime("%Y-%m-%dT%H:%M:%SZ")
         key = re.sub(
             r"[^A-Za-z0-9_-]",
@@ -878,7 +874,7 @@ async def save_pattern(
                     supersedes_key,
                     key,
                     "explicitly replaced via save-pattern supersedes_key",
-                    datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 )
 
             await run_sync(_explicit_supersede)
@@ -950,7 +946,7 @@ async def save_drift_alert(
         db = await run_sync(arango_connector.get_db, database_name or None)
         if not await run_sync(db.has_collection, collection_name):
             return {"result": {"error": f"collection {collection_name!r} not found"}}
-        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         key = re.sub(r"[^A-Za-z0-9_-]", "-", f"{project_id}_{req_id}")[:250]
 
         full = {
@@ -1066,7 +1062,7 @@ async def pattern_applied(
             }
         worked = normalized != "failed"
         db = await run_sync(arango_connector.get_db, database_name or None)
-        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         updated = await run_sync(
             _run_query,
             db,

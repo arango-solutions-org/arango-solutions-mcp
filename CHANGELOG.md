@@ -72,6 +72,10 @@ All notable changes to this project are documented here. The format follows
   `aql_utils.py`, and the flat `agents/`, `mcp_tools/`, `manuals/` trees. All of these now live
   under `src/arangodb_mcp/`. Anything importing them by their old flat paths — or launching
   `main.py` directly — must be updated; see the migration note at the top of this release.
+- **BREAKING — Python 3.10 support.** Python 3.10 reached upstream end of life in October 2026,
+  and the patched releases of a locked dependency no longer support it. The minimum is now
+  Python 3.11; installing on 3.10 fails at dependency resolution with a clear version error.
+  The Docker image is unaffected (it runs Python 3.14). CI tests Python 3.11 and 3.14.
 
 ### Fixed
 
@@ -81,6 +85,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Upgrade `filelock` 3.32.2 → 4.2.10 (twelve CVEs, fixed in 4.2.1 and 4.0.9; pulled in only by
+  the `pip-audit` dev tooling) and `msgpack` 1.2.1 → 1.2.4 (CVE-2026-114613, fixed in 1.2.3).
+  The required dependency audit had failed on `main` since late October.
 - Upgrade OpenTelemetry to 1.45.1 for CVE-2026-114603 in `opentelemetry-api` 1.44.0; the declared
   floors for `opentelemetry-api`, `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`
   are now `^1.45.1`.

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Iterable, Mapping
 
 
-class AQLClassification(str, Enum):
+class AQLClassification(StrEnum):
     READ = "read"
     MUTATION = "mutation"
     AMBIGUOUS = "ambiguous"
