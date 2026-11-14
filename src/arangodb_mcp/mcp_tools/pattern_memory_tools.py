@@ -1029,8 +1029,11 @@ async def save_drift_alert(
 async def pattern_applied(
     keys: List[str] = Field(description="_key(s) of the pattern(s) actually applied."),
     outcome: str = Field(
-        default="worked",
-        description="Apply outcome: 'worked' or 'failed' -- state it explicitly. "
+        default="",
+        description="REQUIRED. Apply outcome: 'worked' or 'failed'. There is no default: "
+        "omitting it is an error, not a success. It defaulted to 'worked' until "
+        "2026-11-14, which meant a positive signal was what an agent got for not "
+        "thinking about the question -- 288 of 288 recorded outcomes are 'worked'. "
         "'failed' records negative signal (bumps applied_failed) WITHOUT boosting "
         "usage_count / last_used, so a pattern that was tried but did not help is "
         "down-weighted in /pattern-search ranking rather than rewarded. A pattern "
@@ -1053,6 +1056,20 @@ async def pattern_applied(
         # yes: 113 applies and 0 failures across 119 patterns, so success_rate was a
         # constant and the ranking multiplier built on it ranked nothing.
         normalized = str(outcome).strip().lower()
+        if not normalized:
+            # Deliberately an instructive error rather than a schema-level required
+            # field: a pydantic validation failure gives the caller no guidance, and a
+            # broken apply path would cost real attribution. This costs one retry.
+            return {
+                "result": {
+                    "error": "outcome is required: pass 'worked', or 'failed' if you "
+                             "tried the pattern and it did not help (the checks it "
+                             "should have made pass are still failing, you reverted it, "
+                             "or it introduced a defect). It is not optional and it "
+                             "does not default to success.",
+                    "error_code": "outcome_required",
+                }
+            }
         if normalized not in ("worked", "failed"):
             return {
                 "result": {
