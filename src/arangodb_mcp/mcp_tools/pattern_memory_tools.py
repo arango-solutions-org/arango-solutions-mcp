@@ -1063,10 +1063,10 @@ async def pattern_applied(
             return {
                 "result": {
                     "error": "outcome is required: pass 'worked', or 'failed' if you "
-                             "tried the pattern and it did not help (the checks it "
-                             "should have made pass are still failing, you reverted it, "
-                             "or it introduced a defect). It is not optional and it "
-                             "does not default to success.",
+                    "tried the pattern and it did not help (the checks it "
+                    "should have made pass are still failing, you reverted it, "
+                    "or it introduced a defect). It is not optional and it "
+                    "does not default to success.",
                     "error_code": "outcome_required",
                 }
             }
