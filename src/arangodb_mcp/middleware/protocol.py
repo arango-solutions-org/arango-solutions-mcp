@@ -9,6 +9,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any, Literal, cast
 
 from mcp.server.caching import CacheableMethod
+from mcp.types.version import HANDSHAKE_PROTOCOL_VERSIONS
 
 ASGIApp = Callable[
     [
@@ -42,10 +43,11 @@ _BASE64_SUFFIX = "?="
 class ProtocolMetadataMiddleware:
     """Validate mirrored MCP routing headers before the SDK reads the body.
 
-    ``auto`` accepts a legacy request only when none of the 2026 routing
-    headers are present. Once a client sends any routing header, the complete
-    strict contract is enforced so intermediaries never observe unchecked
-    metadata.
+    ``auto`` accepts a legacy request when it carries no 2026-only routing header
+    (``Mcp-Method``, ``Mcp-Name``) and either no ``MCP-Protocol-Version`` or one
+    naming a pre-2026 version the SDK's initialize handshake supports. Every other
+    request, including one naming an unknown or empty version, gets the complete
+    strict contract, so intermediaries never observe unchecked metadata.
     """
 
     def __init__(
@@ -98,10 +100,7 @@ class ProtocolMetadataMiddleware:
             key.decode("latin-1").lower(): value.decode("latin-1")
             for key, value in scope.get("headers", [])
         }
-        routing_headers_present = any(
-            name in headers for name in ("mcp-protocol-version", "mcp-method", "mcp-name")
-        )
-        if self.mode == "auto" and not routing_headers_present:
+        if self.mode == "auto" and not self._requests_strict_contract(headers):
             await self.app(scope, self._replay(body), send)
             return
 
@@ -161,6 +160,21 @@ class ProtocolMetadataMiddleware:
             return {"type": "http.request", "body": body, "more_body": False}
 
         return receive
+
+    def _requests_strict_contract(self, headers: dict[str, str]) -> bool:
+        """Whether an ``auto``-mode request signals the 2026 routing contract.
+
+        ``Mcp-Method`` and ``Mcp-Name`` exist only in 2026-07-28, so either one opts in.
+        Clients on 2025-06-18 and later MUST send ``MCP-Protocol-Version`` on every
+        request after ``initialize``, so a header naming one of the SDK's handshake
+        (pre-2026) versions is a legacy client's header and is left to the SDK. Any other
+        value, including an unknown or empty one, is checked strictly here so it keeps
+        the precise ``-32022``/``-32020`` rejection.
+        """
+        if "mcp-method" in headers or "mcp-name" in headers:
+            return True
+        version = headers.get("mcp-protocol-version")
+        return version is not None and version not in HANDSHAKE_PROTOCOL_VERSIONS
 
     def _validate(
         self, headers: dict[str, str], message: dict[str, Any]

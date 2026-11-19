@@ -180,3 +180,94 @@ async def test_unsupported_version_lists_supported_versions():
         "supported": ["2026-07-28"],
         "requested": "1900-01-01",
     }
+
+
+def _legacy_tool_call() -> dict[str, Any]:
+    body = _tool_call()
+    del body["params"]["_meta"]
+    return body
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_passes_2025_version_header_through_to_the_sdk():
+    # Since 2025-06-18, clients MUST send MCP-Protocol-Version on every request after
+    # initialize. That header alone is not a 2026 routing signal; the SDK validates it.
+    app = _RecordingApp()
+    response = await _request(
+        ProtocolMetadataMiddleware(app),
+        _legacy_tool_call(),
+        (b"mcp-protocol-version", b"2025-11-25"),
+    )
+
+    assert response["status"] == 200
+    assert app.body == _legacy_tool_call()
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_enforces_strict_contract_for_a_2026_version_header():
+    response = await _request(
+        ProtocolMetadataMiddleware(_RecordingApp()),
+        _tool_call(),
+        (b"mcp-protocol-version", b"2026-07-28"),
+    )
+
+    assert response["status"] == 400
+    assert json.loads(response["body"])["error"]["code"] == -32020
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_enforces_strict_contract_when_2026_routing_headers_accompany_2025():
+    response = await _request(
+        ProtocolMetadataMiddleware(_RecordingApp()),
+        _legacy_tool_call(),
+        (b"mcp-protocol-version", b"2025-11-25"),
+        (b"mcp-method", b"tools/call"),
+        (b"mcp-name", b"list-collections"),
+    )
+
+    assert response["status"] == 400
+    assert json.loads(response["body"])["error"]["code"] == -32022
+
+
+@pytest.mark.asyncio
+async def test_strict_mode_still_rejects_a_2025_version_header():
+    response = await _request(
+        ProtocolMetadataMiddleware(_RecordingApp(), mode="strict"),
+        _legacy_tool_call(),
+        (b"mcp-protocol-version", b"2025-11-25"),
+    )
+
+    assert response["status"] == 400
+    assert json.loads(response["body"])["error"]["code"] == -32022
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("version", "code"),
+    [("1900-01-01", -32022), ("", -32020)],
+)
+async def test_auto_mode_keeps_strict_rejection_for_unknown_or_empty_versions(version, code):
+    # Only pre-2026 versions the SDK's initialize handshake supports are passed through;
+    # anything else keeps the middleware's precise rejection code.
+    response = await _request(
+        ProtocolMetadataMiddleware(_RecordingApp()),
+        _legacy_tool_call(),
+        (b"mcp-protocol-version", version.encode()),
+    )
+
+    assert response["status"] == 400
+    assert json.loads(response["body"])["error"]["code"] == code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("version", ["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"])
+async def test_auto_mode_passes_every_sdk_handshake_version_through(version):
+    app = _RecordingApp()
+    response = await _request(
+        ProtocolMetadataMiddleware(app),
+        _legacy_tool_call(),
+        (b"mcp-protocol-version", version.encode()),
+    )
+
+    assert response["status"] == 200
+    assert app.body == _legacy_tool_call()
