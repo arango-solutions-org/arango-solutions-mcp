@@ -85,6 +85,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Upgrade OpenTelemetry to 1.45.2 for CVE-2026-126360 in `opentelemetry-api` 1.45.1; the declared
+  floors for `opentelemetry-api`, `opentelemetry-sdk` and `opentelemetry-exporter-otlp-proto-http`
+  are now `^1.45.2`.
 - Upgrade `filelock` 3.32.2 → 4.2.10 (twelve CVEs, fixed in 4.2.1 and 4.0.9; pulled in only by
   the `pip-audit` dev tooling) and `msgpack` 1.2.1 → 1.2.4 (CVE-2026-114613, fixed in 1.2.3).
   The required dependency audit had failed on `main` since late October.
