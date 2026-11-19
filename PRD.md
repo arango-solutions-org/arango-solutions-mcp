@@ -732,7 +732,7 @@ The suite is organized into three tiers based on what infrastructure they need:
 | `httpx` | ^0.28 | OIDC/JWKS and embedding HTTP client |
 | `pyjwt[crypto]` | ^2.15.1 | Asymmetric OIDC access-token verification |
 | `prometheus-client` | ^0.26 | Bounded-cardinality metrics and ASGI exposition |
-| `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` | ^1.45.1 | Trace API, SDK, and OTLP/HTTP export |
+| `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` | ^1.45.2 | Trace API, SDK, and OTLP/HTTP export |
 | `pyyaml` | ^6.0 | Canonical tool-catalog loading |
 
 ### 7.2 Development
