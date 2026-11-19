@@ -1,3 +1,6 @@
+import inspect
+import re
+
 """Unit tests for the shared-memory pattern tools.
 
 Mock-based (no live ArangoDB, no OpenAI key). They lock in the behaviours the
@@ -266,6 +269,20 @@ class TestPatternApplied:
             assert out["result"]["error_code"] == "invalid_outcome", bad
             # nothing was written -- the caller must come back with a real verdict
             assert "_run_query" not in spy.dispatched, bad
+
+    def test_outcome_description_carries_guidance_not_usage_figures(self):
+        """The field description ships to every client in tools/list.
+
+        It must say what to pass and what 'failed' means. Usage statistics belong in
+        the commit and the PR: in a tool schema they go stale and publish numbers
+        from one deployment to every caller.
+        """
+        description = (
+            inspect.signature(pm.pattern_applied).parameters["outcome"].default.description
+        )
+        assert "'worked'" in description and "'failed'" in description
+        assert "error, not a success" in description
+        assert not re.search(r"\d+ of \d+", description)
 
     def test_an_omitted_outcome_is_an_error_not_a_success(self, monkeypatch):
         """`outcome` defaulted to "worked" until 2026-11-14.
