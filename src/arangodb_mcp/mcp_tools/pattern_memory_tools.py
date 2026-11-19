@@ -1031,9 +1031,7 @@ async def pattern_applied(
     outcome: str = Field(
         default="",
         description="REQUIRED. Apply outcome: 'worked' or 'failed'. There is no default: "
-        "omitting it is an error, not a success. It defaulted to 'worked' until "
-        "2026-11-14, which meant a positive signal was what an agent got for not "
-        "thinking about the question -- 288 of 288 recorded outcomes are 'worked'. "
+        "omitting it is an error, not a success. "
         "'failed' records negative signal (bumps applied_failed) WITHOUT boosting "
         "usage_count / last_used, so a pattern that was tried but did not help is "
         "down-weighted in /pattern-search ranking rather than rewarded. A pattern "
