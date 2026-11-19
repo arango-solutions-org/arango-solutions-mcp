@@ -253,7 +253,7 @@ class TestPatternApplied:
         db = MagicMock()
         spy = _dispatch_spy()
         monkeypatch.setattr(pm, "run_sync", spy)
-        for bad in ("success", "ok", "Faild", "", "true"):
+        for bad in ("success", "ok", "Faild", "n/a", "true"):
             with patch.object(pm.arango_connector, "get_db", return_value=db):
                 out = asyncio.run(
                     pm.pattern_applied(
@@ -266,6 +266,44 @@ class TestPatternApplied:
             assert out["result"]["error_code"] == "invalid_outcome", bad
             # nothing was written -- the caller must come back with a real verdict
             assert "_run_query" not in spy.dispatched, bad
+
+    def test_an_omitted_outcome_is_an_error_not_a_success(self, monkeypatch):
+        """`outcome` defaulted to "worked" until 2026-11-14.
+
+        That made a positive signal the thing an agent got for not considering the
+        question at all. 288 of 288 outcomes ever recorded are "worked", so the
+        (0.6 + 0.4*success_rate) multiplier in the search ranking is a constant 1.4
+        across all 223 patterns and cancels out of every comparison it appears in.
+        Removing the default does not fix that by itself -- an agent can still type
+        "worked" -- but it removes the free one.
+
+        An instructive error, deliberately, rather than a required pydantic field: a
+        schema validation failure tells the caller nothing about what to pass, and a
+        broken apply path would cost real attribution. This costs one retry.
+        """
+        db = MagicMock()
+        spy = _dispatch_spy()
+        monkeypatch.setattr(pm, "run_sync", spy)
+        # outcome="" is what the MCP layer passes when the caller omits the argument:
+        # FastMCP builds a pydantic model from this signature and fills in the field
+        # default. Calling the function directly instead leaves `outcome` bound to the
+        # FieldInfo OBJECT, whose str() is non-empty -- so a test that simply dropped
+        # the argument would exercise a path production never takes, and would have
+        # passed for the wrong reason.
+        with patch.object(pm.arango_connector, "get_db", return_value=db):
+            out = asyncio.run(
+                pm.pattern_applied(
+                    keys=["k1"],
+                    outcome="",
+                    collection_name="shared_patterns",
+                    database_name="",
+                )
+            )
+        assert out["result"]["error_code"] == "outcome_required"
+        assert "_run_query" not in spy.dispatched
+        # The error has to say what to pass, or the retry is a guess.
+        assert "'worked'" in out["result"]["error"]
+        assert "'failed'" in out["result"]["error"]
 
     def test_failed_is_accepted_case_and_space_insensitively(self, monkeypatch):
         db = MagicMock()
