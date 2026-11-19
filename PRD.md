@@ -723,12 +723,12 @@ The suite is organized into three tiers based on what infrastructure they need:
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `python` | ^3.11 | Language runtime |
-| `python-arango` | ^8.3.6 | ArangoDB Python driver |
+| `python-arango` | ^8.3.7 | ArangoDB Python driver |
 | `mcp` | ^2.3 | Model Context Protocol SDK (2.x `MCPServer`) |
 | `pydantic` | ^2.14 | Data validation and serialization |
-| `pydantic-settings` | ^2.15 | Environment-based configuration |
-| `anyio` | ^4.15 | Async I/O compatibility |
-| `starlette`, `uvicorn` | >=1.7, >=0.54 | ASGI application and HTTP server for the HTTP transports |
+| `pydantic-settings` | ^2.16 | Environment-based configuration |
+| `anyio` | ^4.16 | Async I/O compatibility |
+| `starlette`, `uvicorn` | >=1.10, >=0.54 | ASGI application and HTTP server for the HTTP transports |
 | `httpx` | ^0.28 | OIDC/JWKS and embedding HTTP client |
 | `pyjwt[crypto]` | ^2.15.1 | Asymmetric OIDC access-token verification |
 | `prometheus-client` | ^0.26 | Bounded-cardinality metrics and ASGI exposition |
@@ -739,8 +739,8 @@ The suite is organized into three tiers based on what infrastructure they need:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `pytest` | ^9.1 | Test framework |
-| `pytest-asyncio` | ^1.4 | Async test support |
+| `pytest` | ^9.2 | Test framework |
+| `pytest-asyncio` | ^1.5 | Async test support |
 | `pytest-timeout` | ^2.2 | Test timeout enforcement |
 | `black` | ^26.10 | Legacy compatibility formatter; CI uses Ruff |
 | `isort` | ^9.0 | Legacy compatibility import sorter; CI uses Ruff |
