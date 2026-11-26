@@ -44,7 +44,7 @@ mypy = "^2.4.1"
 ruff = "^0.17.5"
 pytest-cov = "^7.1.0"
 pip-audit = "^2.10.1"
-types-pyyaml = "^6.0.12.20260906"
+types-pyyaml = "^6.0.12.20261122"
 
 [build-system]
 requires = ["poetry-core"]
